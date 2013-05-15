@@ -165,7 +165,7 @@ def _approximate_polygon(coords, tolerance):
             end_of_chain = True
     return coords[chain, :]
 
-def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3):
+def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3, max_area = None):
 
     def connect(start,end):
         result=[]
@@ -216,7 +216,7 @@ def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3):
 
 
     print '*** Meshing'
-    mesh = triangle(vertices, edges, min_angle=30)
+    mesh = triangle(vertices, edges, min_angle=30, max_area=max_area)
    
     print("*** Assigning materials")
     ids=[]

@@ -2,7 +2,7 @@ from meshutils import MeshBase
 from subprocess import call
 from tempfile import mktemp
 
-def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verbose=False):
+def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verbose=False, refine_edges=True, user_size=None):
 
     filename=mktemp()
 
@@ -33,9 +33,12 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
     else:
         opts += "Q"
 
+    if not refine_edges:
+        opts += "Y"
+
     cmdline = ["triangle", opts, filename + ".poly"]
 
-    print cmdline
+    #print cmdline
     call(cmdline)
 
     f=open(filename+'.1.node','r')
@@ -55,6 +58,49 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
     mesh = MeshBase()
     mesh.set_vertices(vertices)
     mesh.set_cells(cells)
+
+    if user_size:
+        
+        opts += 'ra'
+        old_len = len(mesh.cells)
+
+        for loop in range(1,30):
+
+            area = user_size(mesh)
+
+            f=open('%s.%d.area' % (filename, loop),'w')
+            f.write('%d\n' % len(area))
+            for i, a in enumerate(area):
+                f.write('%d %f\n' % (i, a))
+            f.close()
+
+            cmdline = ["triangle", opts, "%s.%d.poly" % (filename, loop)]
+
+            #print cmdline
+            call(cmdline)
+
+            f=open('%s.%d.node' % (filename, loop+1),'r')
+            num_vertices = int(f.readline().split()[0])
+            vertices = []
+            for i in xrange(num_vertices):
+                vertices.append([float(coord) for coord in f.readline().split()[1:3]])
+            f.close()
+
+            f=open('%s.%d.ele' % (filename, loop+1), 'r')
+            num_cells = int(f.readline().split()[0])
+            cells = []
+            for i in xrange(num_cells):
+                cells.append([int(vertice) for vertice in f.readline().split()[1:]])
+            f.close()
+
+            mesh = MeshBase()
+            mesh.set_vertices(vertices)
+            mesh.set_cells(cells)
+
+            if old_len == len(mesh.cells):
+                break
+
+            old_len = len(mesh.cells)
 
     return mesh
     

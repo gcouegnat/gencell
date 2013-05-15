@@ -14,9 +14,9 @@ def orthotropic_stiffness(E1, E2, E3, nu23, nu13, nu12, G23, G13, G12):
     S = np.array([[1.0/E1  , -nu12/E1, -nu13/E1, 0      , 0      , 0],
                       [-nu12/E1, 1.0/E2  , -nu23/E2, 0      , 0      , 0],
                       [-nu13/E1, -nu23/E2, 1.0/E3  , 0      , 0      , 0],
-                      [0       , 0       , 0       , 1.0/G23, 0      , 0],
-                      [0       , 0       , 0       , 0      , 1.0/G13, 0],
-                      [0       , 0       , 0       , 0      , 0      , 1.0/G12]])
+                      [0       , 0       , 0       , 1.0/G12, 0      , 0],
+                      [0       , 0       , 0       , 0      , 1.0/G23, 0],
+                      [0       , 0       , 0       , 0      , 0      , 1.0/G13]])
     return np.linalg.inv(S)
 
 def isotropic_thermal_expansion(alpha):
