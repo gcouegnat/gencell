@@ -421,8 +421,10 @@ def find_edges(mesh, neighbours=False):
                 last_edge[p] = nedges
                 nedges += 1
 
-    if not neighbours:
+    if neighbours == False:
         edges = edges[:nedges,0:2]
+    else:
+        edges = edges[:nedges]
 
     return edges
 
