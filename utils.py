@@ -10,12 +10,12 @@ def plot_circle(c,r,color='r',alpha=1.0):
         #plt.fill(py,px,color,alpha=alpha)
         plt.plot(py,px,color)
 
-def fill_circle(cx, cy, r, img):
+def fill_circle(cx, cy, r, img, val=255):
     sx,sy = img.shape
-    if cx < -r or cx > sx + r or cy < r or cy > sy + r:
-        pass
-    else:
-        for i in xrange(max(0, int(cx-r)), min(sx, int(cx+r)+1)):
-            for j in xrange(max(0, int(cy-r)), min(sy, int(cy+r)+1)):
-                if ((cx-i)**2 + (cy-j)**2) < r*r:
-                    img[i,j] = 255
+    #if cx < -r or cx > sx + r or cy < r or cy > sy + r:
+        #pass
+    #else:
+    for i in xrange(max(0, int(cx-r)), min(sx, int(cx+r)+1)):
+        for j in xrange(max(0, int(cy-r)), min(sy, int(cy+r)+1)):
+            if ((cx-i)**2 + (cy-j)**2) < r*r:
+                img[i,j] = val
