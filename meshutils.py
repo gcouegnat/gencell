@@ -30,8 +30,6 @@ def medit_write(filename, vertices, cells, ids=None):
         for i in range(len(cells)):
             f.write("%d\t%d\t%d\t%d\t%d\n" % (cells[i,0] + 1, cells[i,1] + 1, cells[i,2] + 1, cells[i,3] + 1, ids[i]))
 
-
-
     f.write("End")
     f.close()
 
