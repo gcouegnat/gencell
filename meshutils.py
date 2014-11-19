@@ -160,15 +160,17 @@ def _write_by_line(f, data, max_per_line=8, sep=","):
     f.write('%s' % out)
     
 
-def abaqus_write(filename, vertices, cells, ids, nsets=None):
+def abaqus_write(filename, vertices, cells, ids, nsets=None, cell_type=None):
     """Write mesh to Abaqus foramt (*.inp)"""
     dim = vertices.shape[1]
-    if dim == 2 and cells.shape[1] == 3:
-        cell_type = 'CPS3'
-    elif dim == 3 and cells.shape[1] == 4:
-        cell_type = 'C3D4'
-    else:
-        raise ValueError, "Unknown element type in dim  %s" % dim
+    
+    if cell_type is None:
+        if dim == 2 and cells.shape[1] == 3:
+            cell_type = 'CPS3'
+        elif dim == 3 and cells.shape[1] == 4:
+            cell_type = 'C3D4'
+        else:
+            raise ValueError, "Unknown element type in dim  %s" % dim
 
     f = open(filename, 'w')
     
