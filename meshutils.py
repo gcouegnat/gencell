@@ -31,10 +31,6 @@ def medit_write(filename, vertices, cells, ids=None, vids=None):
         f.write("Tetrahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
             f.write("%d\t%d\t%d\t%d\t%d\n" % (cells[i,0] + 1, cells[i,1] + 1, cells[i,2] + 1, cells[i,3] + 1, ids[i]))
-    elif cells.shape[1]==8:
-        f.write("Hexahedra\n%d\n" % cells.shape[0])
-        for i in range(len(cells)):
-            f.write("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n" % (cells[i,0] + 1, cells[i,1] + 1, cells[i,2] + 1, cells[i,3] + 1, cells[i,4] + 1, cells[i,5] + 1, cells[i,6] + 1, cells[i,7] + 1, ids[i]))
 
     f.write("End")
     f.close()
@@ -152,27 +148,87 @@ def zebulon_write(filename, vertices, cells):
     f.write('***return')
     f.close()
 
-def abaqus_write(filename, vertices, cells):
-    """Write mesh to Abaqus format (*.inp)"""
-    dim = vertices.shape[1]
-    if cells.shape[1] ==3:
-        cell_type = 'CPS3'
 
+def _write_by_line(f, data, max_per_line=8, sep=","):
+    out = ""
+    nline = len(data)/max_per_line
+    for k in xrange(nline):
+        out += "".join("%d%s " % (x,sep) for x in data[k*max_per_line:(k+1)*max_per_line])
+        out += "\n"
+    out += "".join("%d%s" % (x, sep) for x in data[nline*max_per_line:])
+    out += "\n"
+    f.write('%s' % out)
+    
+
+def abaqus_write(filename, vertices, cells, ids, nsets=None):
+    """Write mesh to Abaqus foramt (*.inp)"""
+    dim = vertices.shape[1]
+    if dim == 2 and cells.shape[1] == 3:
+        cell_type = 'CPS3'
+    elif dim == 3 and cells.shape[1] == 4:
+        cell_type = 'C3D4'
+    else:
+        raise ValueError, "Unknown element type in dim  %s" % dim
 
     f = open(filename, 'w')
-    f.write('*NODE, NSET=NODES\n')
+    
+    # Write nodes
+    f.write('*NODE, NSET=ALL_NODES\n')
     for i, v in enumerate(vertices):
         f.write(str(i+1))
         for c in v:
             f.write(', ' + str(c))
         f.write('\n')
-
-    f.write('*ELEMENT, ELSET=ELEMS, TYPE=' + cell_type + '\n')
+        
+    # Write elements
+    f.write('*ELEMENT, ELSET=ALL_ELEMS, TYPE=' + cell_type + '\n')
     for i, c in enumerate(cells):
         f.write(str(i+1))
         for v in c:
             f.write(', ' + str(v+1))
         f.write('\n')
+        
+    # Write elsets
+    for idx in np.unique(ids):
+        f.write('*ELSET, ELSET=MAT%d\n' % idx)
+        elem = np.where(ids == idx)[0] + 1
+        _write_by_line(f, elem)
+        
+    # Write nsets     
+    xmin = np.min(vertices, axis=0)
+    xmax = np.max(vertices, axis=0)
+    tol = 1e-4
+    
+    nset = np.where(np.abs(vertices[:, 0] - xmin[0]) < tol)[0]
+    f.write('*NSET, NSET=XMIN\n')
+    _write_by_line(f, nset + 1)
+
+    nset = np.where(np.abs(vertices[:, 0] - xmax[0]) < tol)[0]
+    f.write('*NSET, NSET=XMAX\n')
+    _write_by_line(f, nset + 1)    
+
+    nset = np.where(np.abs(vertices[:, 1] - xmin[1]) < tol)[0]
+    f.write('*NSET, NSET=YMIN\n')
+    _write_by_line(f, nset + 1)    
+
+    nset = np.where(np.abs(vertices[:, 1] - xmax[1]) < tol)[0]
+    f.write('*NSET, NSET=YMAX\n')
+    _write_by_line(f, nset + 1)
+    
+    if dim == 3:
+        nset = np.where(np.abs(vertices[:, 2] - xmin[2]) < tol)[0]
+        f.write('*NSET, NSET=ZMIN\n')
+        _write_by_line(f, nset + 1)    
+
+        nset = np.where(np.abs(vertices[:, 2] - xmax[2]) < tol)[0]
+        f.write('*NSET, NSET=ZMAX\n')
+        _write_by_line(f, nset + 1)
+
+
+    if nsets:
+        for key, value in nsets.iteritems():
+            f.write('*NSET, NSET=%s\n' % key)
+            _write_by_line(f, value + 1)
 
 
     f.close()
@@ -218,6 +274,7 @@ class MeshBase():
 
     def save(self, filename):
         ext = filename.split(".")[-1]
+        print ext
         if ext == "mesh":
             medit_write(filename, self.vertices, self.cells,
                         self.cell_markers, self.vertice_markers)
@@ -227,7 +284,7 @@ class MeshBase():
         elif ext == "geof":
             zebulon_write(filename, self.vertices, self.cells)
         elif ext == "inp":
-            abaqus_write(filename, self.vertices, self.cells)
+            abaqus_write(filename, self.vertices, self.cells, self.cell_markers)
         elif ext == "gnu":
             gnuplot_write(filename, self.vertices, self.cells,
                           self.cell_markers)
@@ -247,6 +304,11 @@ class MeshBase():
             self.cell_markers = indices - 1
 
     def remove_cells_with_marker(self, marker):
+        
+        dim = self.vertices.shape[1]
+        if dim == 3:
+            raise ValueError, "Not implemented for dim == 3"
+        
         old_vertices = self.vertices
         old_cells = self.cells
         old_ids = self.cell_markers
