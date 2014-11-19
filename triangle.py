@@ -24,7 +24,7 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
 
     if not min_angle and quality:
         opts += "q"
-    
+
     if max_area:
         opts += "a%.16f" % max_area
 
@@ -60,12 +60,13 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
     mesh.set_cells(cells)
 
     if user_size:
-        
+
         opts += 'ra'
         old_len = len(mesh.cells)
 
-        for loop in range(1,30):
+        for loop in range(1,10):
 
+            print ('Adapting mesh: iteration %d' % loop)
             area = user_size(mesh)
 
             f=open('%s.%d.area' % (filename, loop),'w')
@@ -97,13 +98,18 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
             mesh.set_vertices(vertices)
             mesh.set_cells(cells)
 
-            if old_len == len(mesh.cells):
+            print '   %d cells' % len(mesh.cells)
+
+            ratio = 1.0*abs(old_len - len(mesh.cells))/old_len
+            print ratio
+
+            if ratio < 0.01:
                 break
 
             old_len = len(mesh.cells)
 
     return mesh
-    
+
 
 if __name__ == "__main__":
 

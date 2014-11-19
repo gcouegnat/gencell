@@ -1,7 +1,7 @@
 
 import numpy as np
 
-def medit_write(filename, vertices, cells, ids=None):
+def medit_write(filename, vertices, cells, ids=None, vids=None):
     """Write a mesh to Medit format
     """
     dim = vertices.shape[1]
@@ -9,17 +9,19 @@ def medit_write(filename, vertices, cells, ids=None):
     if ids is None:
         ids = np.zeros((len(cells)), dtype='int')
 
+    if vids is None:
+        vids = np.zeros((len(vertices)), dtype='int')
 
     f = open(filename, "w")
     f.write("MeshVersionFormatted 1\n")
     f.write("Dimension\n%d\n" % dim)
     
     f.write("Vertices\n%d\n" % vertices.shape[0])
-    for v in vertices:
+    for (v,m) in zip(vertices, vids):
         if dim==2:
-            f.write("%f\t%f\t%d\n" % (v[0], v[1], 0))
+            f.write("%f\t%f\t%d\n" % (v[0], v[1], m))
         elif dim==3:
-            f.write("%f\t%f\t%f\t%d\n" % (v[0], v[1], v[2], 0))
+            f.write("%f\t%f\t%f\t%d\n" % (v[0], v[1], v[2], m))
     
     if cells.shape[1]==3:
         f.write("Triangles\n%d\n" % cells.shape[0])
@@ -29,10 +31,13 @@ def medit_write(filename, vertices, cells, ids=None):
         f.write("Tetrahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
             f.write("%d\t%d\t%d\t%d\t%d\n" % (cells[i,0] + 1, cells[i,1] + 1, cells[i,2] + 1, cells[i,3] + 1, ids[i]))
+    elif cells.shape[1]==8:
+        f.write("Hexahedra\n%d\n" % cells.shape[0])
+        for i in range(len(cells)):
+            f.write("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n" % (cells[i,0] + 1, cells[i,1] + 1, cells[i,2] + 1, cells[i,3] + 1, cells[i,4] + 1, cells[i,5] + 1, cells[i,6] + 1, cells[i,7] + 1, ids[i]))
 
     f.write("End")
     f.close()
-
 
 def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=None):
 
@@ -121,11 +126,63 @@ def pdf_write(filename, vertices, cells, ids):
     plt.gca().set_axis_off()
     fig.savefig(filename)
 
+def zebulon_write(filename, vertices, cells):
+    """Write mesh to Zebulon format (*.geof)"""
+    dim = vertices.shape[1]
+    if cells.shape[1] == 3:
+        cell_type = 'c2d3'
+    else:
+        cell_type = 'c3d4'
+    f = open(filename, 'w')
+    f.write('***geometry\n')
+    f.write('**node\n')
+    f.write('%d %d\n' % (vertices.shape[0], vertices.shape[1]))
+    for i, v in enumerate(vertices):
+        if dim == 2:
+            f.write('    %d %e %e\n' % (i+1, v[0], v[1]))
+        else:
+            f.write('    %d %e %e %e\n' % (i+1, v[0], v[1], v[2]))
+    f.write('**element\n')
+    f.write('%d\n' % cells.shape[0])
+    for i, c in enumerate(cells):
+        if cell_type == 'c2d3':
+            f.write('    %d %s %d %d %d\n' % (i+1, cell_type, c[0]+1, c[1]+1, c[2]+1))
+        else:
+            f.write('    %d %s %d %d %d %d\n' % (i+1, cell_type, c[0]+1, c[1]+1, c[2]+1, c[3]+1))
+    f.write('***return')
+    f.close()
+
+def abaqus_write(filename, vertices, cells):
+    """Write mesh to Abaqus format (*.inp)"""
+    dim = vertices.shape[1]
+    if cells.shape[1] ==3:
+        cell_type = 'CPS3'
+
+
+    f = open(filename, 'w')
+    f.write('*NODE, NSET=NODES\n')
+    for i, v in enumerate(vertices):
+        f.write(str(i+1))
+        for c in v:
+            f.write(', ' + str(c))
+        f.write('\n')
+
+    f.write('*ELEMENT, ELSET=ELEMS, TYPE=' + cell_type + '\n')
+    for i, c in enumerate(cells):
+        f.write(str(i+1))
+        for v in c:
+            f.write(', ' + str(v+1))
+        f.write('\n')
+
+
+    f.close()
+
 
 class MeshBase():
-    def __init__(self, vertices=None, cells=None, cell_markers=None):
+    def __init__(self, vertices=None, cells=None, vertice_markers=None, cell_markers=None):
         self.vertices = vertices
         self.cells = cells
+        self.vertice_markers = vertice_markers
         self.cell_markers = cell_markers
 
     def set_vertices(self, vertices):
@@ -144,11 +201,17 @@ class MeshBase():
         if markers is not None:
             self.set_cell_markers(markers)
 
+    def set_vertice_markers(self, markers):
+        assert(len(markers) == len(self.vertices))
+        self.vertice_markers = np.array(markers, dtype="int")
+        #for i, mark in enumerate(markers):
+            #self.vertice_markers[i] = mark
+
     def set_cell_markers(self, markers):
         assert(len(markers) == len(self.cells))
         self.cell_markers = np.array(markers, dtype="int")
-        for i, mark in enumerate(markers):
-            self.cell_markers[i] = mark
+        #for i, mark in enumerate(markers):
+            #self.cell_markers[i] = mark
 
     def set_all_cell_markers(self, marker):
         self.cell_markers = int(marker) * np.ones(len(self.cells))
@@ -157,10 +220,14 @@ class MeshBase():
         ext = filename.split(".")[-1]
         if ext == "mesh":
             medit_write(filename, self.vertices, self.cells,
-                        self.cell_markers)
+                        self.cell_markers, self.vertice_markers)
         elif ext == "vtk":
             vtk_write(filename, self.vertices, self.cells,
                       self.cell_markers)
+        elif ext == "geof":
+            zebulon_write(filename, self.vertices, self.cells)
+        elif ext == "inp":
+            abaqus_write(filename, self.vertices, self.cells)
         elif ext == "gnu":
             gnuplot_write(filename, self.vertices, self.cells,
                           self.cell_markers)
@@ -177,7 +244,7 @@ class MeshBase():
             num_unique_markers = len(unique_markers) - 1
             self.cell_markers = num_unique_markers - indices
         else:
-            self.cell_markers = indices
+            self.cell_markers = indices - 1
 
     def remove_cells_with_marker(self, marker):
         old_vertices = self.vertices
@@ -246,9 +313,14 @@ def medit_reader(filename):
     f = open(filename, 'r')
 
     vertices = []
-    cells = []
-    cell_markers = []
+    markers = []
+    
+    tri = []
+    tri_markers = []
     ntri = 0
+    
+    tet = []
+    tet_markers = []
     ntet = 0
 
     while True:
@@ -258,7 +330,7 @@ def medit_reader(filename):
 
         if next_line.startswith('Dimension'):
             if len(next_line.split()) > 1:
-                dim = int(next_line[1])
+                dim = int(next_line.split()[1])
             else:
                 dim = int(get_next_line(f).split()[0])
 
@@ -270,27 +342,28 @@ def medit_reader(filename):
             for i in range(num_vertex):
                 next_line = get_next_line(f)
                 vertices.append([float(coord) for coord in next_line.split()[0:dim]])
+                markers.append(int(next_line.split()[dim]))
 
         if next_line.startswith('Triangles'):
             if len(next_line.split()) > 1:
-                num_cell = int(next_line[1])
+                num_tri = int(next_line[1])
             else:
-                num_cell = int(get_next_line(f).split()[0])
-            for i in range(num_cell):
+                num_tri = int(get_next_line(f).split()[0])
+            for i in range(num_tri):
                 next_line = get_next_line(f)
-                cells.append([int(coord) - 1 for coord in next_line.split()[0:3]])
-                cell_markers.append(int(next_line.split()[3]))
+                tri.append([int(coord) - 1 for coord in next_line.split()[0:3]])
+                tri_markers.append(int(next_line.split()[3]))
                 ntri += 1
 
         if next_line.startswith('Tetrahedra'):
             if len(next_line.split()) > 1:
-                num_cell = int(next_line[1])
+                num_tet = int(next_line[1])
             else:
-                num_cell = int(get_next_line(f).split()[0])
-            for i in range(num_cell):
+                num_tet = int(get_next_line(f).split()[0])
+            for i in range(num_tet):
                 next_line = get_next_line(f)
-                cells.append([int(coord) - 1 for coord in next_line.split()[0:4]])
-                cell_markers.append(int(next_line.split()[4]))
+                tet.append([int(coord) - 1 for coord in next_line.split()[0:4]])
+                tet_markers.append(int(next_line.split()[4]))
                 ntet += 1
 
     #if ntet==0:
@@ -300,8 +373,18 @@ def medit_reader(filename):
     #print 'Number of vertex: %d' % num_vertex
     #print 'Number of cell: %d' % num_cell
 
+
+    if ntet > 0:
+        cells = tet
+        cell_markers = tet_markers
+    else:
+        cells = tri
+        cell_markers = tri_markers
+
     mesh = MeshBase()
     mesh.set_vertices(vertices)
+    mesh.set_vertice_markers(markers)
+
     mesh.set_cells(cells)
     mesh.set_cell_markers(cell_markers)
 
@@ -356,6 +439,9 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
     else:
         delta_z = lc
         offset = delta_z * subdivisions
+
+    
+    
 
     nvert = len(mesh.vertices)
     ncell = len(mesh.cells)
@@ -429,13 +515,28 @@ def find_edges(mesh, neighbours=False):
 def find_boundary_edges(mesh):
     
     edges = find_edges(mesh, neighbours=True)
+    boundary_edges = np.asarray(edges[edges[:,3] == -1])
 
-    boundary_edges = []
-    for edge in edges:
-        if edge[3] == -1:
-            boundary_edges.append(tuple(edge[0:2]))
+    for edge in boundary_edges:
+        ## check edge orientation
+        v0 = edge[0]
+        v1 = edge[1]
+        t = edge[2]
 
-    return boundary_edges
+        dx = mesh.vertices[v1,0] - mesh.vertices[v0,0]
+        dy = mesh.vertices[v1,1] - mesh.vertices[v0,1]
+
+        le = np.sqrt( dx*dx + dy*dy)
+        nx = dy/le
+        ny = -dx/le
+
+        bary = np.mean(mesh.vertices[mesh.cells[t]], axis=0)
+        middle = 0.5*(mesh.vertices[v0] + mesh.vertices[v1])
+
+        if np.dot([nx,ny], bary - middle) > 0.0:
+            edge[0], edge[1] = edge[1], edge[0]
+
+    return boundary_edges[:,0:2]
 
 
 def remove_duplicate_faces(mesh):

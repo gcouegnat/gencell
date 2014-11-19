@@ -5,93 +5,93 @@ from scipy.misc import imsave
 from meshutils import *
 from triangle import *
 
-def _find_contours(img):
-    out = np.zeros(img.shape, dtype=np.bool)
-    nr,nc = img.shape
-    print "First phase"
-    for r in range(0,nr):
-        for c in range(1,nc-1):
-            if (img[r,c]>img[r,c+1] and img[r,c-1] == img[r,c]): 
-                out[r,c]=1
-            if (img[r,c]==img[r,c+1] and img[r,c-1] < img[r,c]): 
-                out[r,c]=1
-    print "Second phase"
-    for c in range(0,nc):
-        for r in range(1,nr-1):
-            if (img[r,c]>img[r+1,c] and img[r-1,c] == img[r,c]): 
-                out[r,c]=1
-            if (img[r,c]==img[r+1,c] and img[r-1,c] < img[r,c]): 
-                out[r,c]=1
-    return out
+#def find_contours(img):
+#    out = np.zeros(img.shape, dtype=np.bool)
+#    nr,nc = img.shape
+#    print "First phase"
+#    for r in range(0,nr):
+#        for c in range(1,nc-1):
+#            if (img[r,c]>img[r,c+1] and img[r,c-1] == img[r,c]):
+#                out[r,c]=1
+#            if (img[r,c]==img[r,c+1] and img[r,c-1] < img[r,c]):
+#                out[r,c]=1
+#    print "Second phase"
+#    for c in range(0,nc):
+#        for r in range(1,nr-1):
+#            if (img[r,c]>img[r+1,c] and img[r-1,c] == img[r,c]):
+#                out[r,c]=1
+#            if (img[r,c]==img[r+1,c] and img[r-1,c] < img[r,c]):
+#                out[r,c]=1
+#    return out
 
-def _assemble_contours(img):
-    deltas=[(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1),(1,1)]
-    contours = {}
-    index = 0
-    nx,ny = img.shape
-    xx=[0,nx-1]
-    yy=[0,ny-1]
+#def assemble_contours(img):
+#    deltas=[(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1),(1,1)]
+#    contours = {}
+#    index = 0
+#    nx,ny = img.shape
+#    xx=[0,nx-1]
+#    yy=[0,ny-1]
 
-    for i in xrange(nx):
-        for j in yy: 
-            if img[i,j]== True:
-                index += 1
-                img[i,j]= False
-                contours[index]=[(i,j)]
-                si, sj = i, j
-                next_found = 1
-                while next_found:
-                    next_found = 0
-                    for dx,dy in deltas:
-                        ti = max(0, min(si+dx, nx-1))
-                        tj = max(0, min(sj+dy, ny-1))
-                        if img[ti,tj] == True:
-                            contours[index].append((ti,tj))
-                            img[ti,tj] = False
-                            si, sj = ti, tj
-                            next_found = 1
-                            break
-    for i in xx:
-        for j in xrange(ny): 
-            if img[i,j]== True:
-                index += 1
-                img[i,j]= False
-                contours[index]=[(i,j)]
-                si, sj = i, j
-                next_found = 1
-                while next_found:
-                    next_found = 0
-                    for dx,dy in deltas:
-                        ti = max(0, min(si+dx, nx-1))
-                        tj = max(0, min(sj+dy, ny-1))
-                        if img[ti,tj] == True:
-                            contours[index].append((ti,tj))
-                            img[ti,tj] = False
-                            si, sj = ti, tj
-                            next_found = 1
-                            break
-    for i in xrange(1,nx-1):
-        for j in xrange(1,ny-1): 
-            if img[i,j]== True:
-                index += 1
-                img[i,j]= False
-                contours[index]=[(i,j)]
-                si, sj = i, j
-                next_found = 1
-                while next_found:
-                    next_found = 0
-                    for dx,dy in deltas:
-                        ti = max(0, min(si+dx, nx-1))
-                        tj = max(0, min(sj+dy, ny-1))
-                        if img[ti,tj] == True:
-                            contours[index].append((ti,tj))
-                            img[ti,tj] = False
-                            si, sj = ti, tj
-                            next_found = 1
-                            break
-                contours[index].append(contours[index][0])
+#    for i in xrange(nx):
+#        for j in yy:
+#            if img[i,j]== True:
+#                index += 1
+#                img[i,j]= False
+#                contours[index]=[(i,j)]
+#                si, sj = i, j
+#                next_found = 1
+#                while next_found:
+#                    next_found = 0
+#                    for dx,dy in deltas:
+#                        ti = max(0, min(si+dx, nx-1))
+#                        tj = max(0, min(sj+dy, ny-1))
+#                        if img[ti,tj] == True:
+#                            contours[index].append((ti,tj))
+#                            img[ti,tj] = False
+#                            si, sj = ti, tj
+#                            next_found = 1
+#                            break
+#    for i in xx:
+#        for j in xrange(ny):
+#            if img[i,j]== True:
+#                index += 1
+#                img[i,j]= False
+#                contours[index]=[(i,j)]
+#                si, sj = i, j
+#                next_found = 1
+#                while next_found:
+#                    next_found = 0
+#                    for dx,dy in deltas:
+#                        ti = max(0, min(si+dx, nx-1))
+#                        tj = max(0, min(sj+dy, ny-1))
+#                        if img[ti,tj] == True:
+#                            contours[index].append((ti,tj))
+#                            img[ti,tj] = False
+#                            si, sj = ti, tj
+#                            next_found = 1
+#                            break
+#    for i in xrange(1,nx-1):
+#        for j in xrange(1,ny-1):
+#            if img[i,j]== True:
+#                index += 1
+#                img[i,j]= False
+#                contours[index]=[(i,j)]
+#                si, sj = i, j
+#                next_found = 1
+#                while next_found:
+#                    next_found = 0
+#                    for dx,dy in deltas:
+#                        ti = max(0, min(si+dx, nx-1))
+#                        tj = max(0, min(sj+dy, ny-1))
+#                        if img[ti,tj] == True:
+#                            contours[index].append((ti,tj))
+#                            img[ti,tj] = False
+#                            si, sj = ti, tj
+#                            next_found = 1
+#                            break
+#                contours[index].append(contours[index][0])
 
-    return contours
+#    return contours
 
 def _smooth(coords, iterations, closed=False):
 
@@ -185,13 +185,29 @@ def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3, max_area = None
     nx,ny = img.shape
 
     print '*** Detecting image contours'
-    bw = _find_contours(img)
+    #bw = find_contours(img)
 
-    print '*** Assembling contours'
-    contours = _assemble_contours(bw)
+    #print '*** Assembling contours'
+    #contours = assemble_contours(bw)
+
+    import skimage.measure
+
+    val = np.unique(img).astype('float')
+    val = val[::-1]
+    level = 0.5*(val[0] + val[1])
+    print 'level: ', level
+    contours =  skimage.measure.find_contours(img, level=level)
+    if len(contours)==1:
+        contours = [contours, ]
+    for i in range(1, len(val)-1):
+        level = 0.5*(val[i] + val[i+1])
+        print 'level:', level
+        new_contours =  skimage.measure.find_contours(img, level=level)
+        contours.extend(new_contours) # = np.hstack((contours, new_contours))
 
     print '*** Approximating pixels chains'
-    for contour in contours.itervalues():
+    for contour in contours: #.itervalues():
+    #for contour in contours.itervalues():
         pts = np.array(contour, 'float')
         if pts.shape[0] > 4:
             closed = False
@@ -216,19 +232,19 @@ def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3, max_area = None
 
 
     print '*** Meshing'
-    mesh = triangle(vertices, edges, min_angle=30, max_area=max_area)
-   
+    mesh = triangle(vertices, edges) #, quality=True) #, min_angle=30.0, max_area=max_area)
+
     print("*** Assigning materials")
     ids=[]
     for i in xrange(len(mesh.cells)):
         xc = 0.333333333*(mesh.vertices[mesh.cells[i][0]][0]
-            + mesh.vertices[mesh.cells[i][1]][0] 
+            + mesh.vertices[mesh.cells[i][1]][0]
             + mesh.vertices[mesh.cells[i][2]][0])
         yc = 0.333333333*(mesh.vertices[mesh.cells[i][0]][1]+mesh.vertices[mesh.cells[i][1]][1]+mesh.vertices[mesh.cells[i][2]][1])
         ids.append(img[int(xc), int(yc)])
     mesh.set_cell_markers(ids)
 
-    mesh.remove_cells_with_marker(0)
+#    mesh.remove_cells_with_marker(0)
     mesh.renumber_cell_markers(reverse=True)
 
 
@@ -244,7 +260,7 @@ if __name__ == '__main__':
 
     mesh.save('cell.mesh')
     mesh.save('cell.vtk')
-    
+
     #bw = _find_contours(img)
     #imsave('bw.png', bw)
-    
+

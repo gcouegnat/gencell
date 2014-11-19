@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import coda
 
@@ -229,7 +230,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
                volumic_average(mesh, gp_data['S31'])]
 
     Ceff = 0.5e2*(Ceff + Ceff.transpose())
-    aeff = -100.0 * np.dot(np.linalg.inv(Ceff), sig)
+    aeff = -0.01 * np.dot(np.linalg.inv(Ceff), sig)
 
     return Ceff, aeff
 
@@ -508,7 +509,7 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
                          (np.abs(mesh.vertices[:,1] - xmin[1]) > tol) *
                          (np.abs(mesh.vertices[:,1] - xmax[1]) > tol) *
                          (np.abs(mesh.vertices[:,2] - xmax[2]) < tol))
-        
+
         (f2,) = np.where((np.abs(mesh.vertices[:,1] - xmin[1]) > tol) *
                          (np.abs(mesh.vertices[:,1] - xmax[1]) > tol) *
                          (np.abs(mesh.vertices[:,2] - xmin[2]) > tol) *
@@ -541,7 +542,7 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
         f4 = f4[np.argsort(mesh.vertices[f4,0]**2 + mesh.vertices[f4,2]**2)]
         f5 = f5[np.argsort(mesh.vertices[f5,0]**2 + mesh.vertices[f5,2]**2)]
 
-        
+
         for k in range(6):
             emacro = [0., 0., 0., 0., 0., 0.]
             emacro[k] = 0.01
@@ -557,7 +558,7 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
             bc_c7 = coda.DirichletBC(c7, ux=0.5*emacro[3]*ly+0.5*emacro[5]*lz, uy=emacro[1]*ly+0.5*emacro[4]*lz, uz=0.5*emacro[4]*ly+emacro[2]*lz)
 
 
-            bcs = [bc_c0, bc_c1, bc_c2, bc_c3, 
+            bcs = [bc_c0, bc_c1, bc_c2, bc_c3,
                    bc_c4, bc_c5, bc_c6, bc_c7]
 
 
@@ -609,7 +610,7 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
     return Ceff, aeff
 
 
-def impose_periodic_strain(mesh, materials, emacro, output=None):
+def impose_periodic_strain(mesh, materials, emacro, output=None, verbose=False):
 
     dim = mesh.vertices.shape[1]
     tol = 1e-6
@@ -627,6 +628,12 @@ def impose_periodic_strain(mesh, materials, emacro, output=None):
         southeast = np.where((np.abs(mesh.vertices[:,0] - xmax[0]) < tol) * (np.abs(mesh.vertices[:,1] - xmin[1]) < tol))
         northwest = np.where((np.abs(mesh.vertices[:,0] - xmin[0]) < tol) * (np.abs(mesh.vertices[:,1] - xmax[1]) < tol))
         northeast = np.where((np.abs(mesh.vertices[:,0] - xmax[0]) < tol) * (np.abs(mesh.vertices[:,1] - xmax[1]) < tol))
+
+        print southeast
+        print southwest
+        print northeast
+        print northwest
+
 
         (west,) = np.where((np.abs(mesh.vertices[:,0] - xmin[0]) < tol)
                 * (np.abs(mesh.vertices[:,1] - xmin[1]) > tol)
@@ -664,7 +671,11 @@ def impose_periodic_strain(mesh, materials, emacro, output=None):
         bc_northeast = coda.DirichletBC(northeast, ux=emacro[0]*lx+emacro[2]*ly/2.0, uy=emacro[2]*lx/2.0+emacro[1]*ly)
         bcs = [bc_southwest, bc_southeast, bc_northwest, bc_northeast]
 
-        gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, output=output)
+        gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, output=output, verbose=verbose)
+
+    else:
+        print 'Not implemented in dim=3'
+        sys.exit(1)
 
     return gp_data
 

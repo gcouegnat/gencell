@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 class DirichletBC():
     def __init__(self, vertices=None, ux=None, uy=None, uz=None):
@@ -15,7 +16,7 @@ class DirichletBC():
 
     def set_uy(self, uy):
         self.uy = uy
-    
+
     def set_uz(self, uz):
         self.uz = uz
 
@@ -31,7 +32,7 @@ class _wdir:
 
     def __init__(self, newpath):
         self.path = newpath
-    
+
     def __enter__(self):
         self.oldpath = os.getcwd()
         os.chdir(self.path)
@@ -44,7 +45,7 @@ def _load_data(filename):
     data = f.read()
     return [float(value) for value in data.split()]
 
-def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=False):
+def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=True, prev=None):
 
     from tempfile import mkdtemp
     from shutil import rmtree
@@ -61,9 +62,9 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
         f.write('%d\n' % mesh.vertices.shape[0])
         for i in range(mesh.vertices.shape[0]):
             if dim==2:
-                f.write('%f %f\n' % (mesh.vertices[i,0], mesh.vertices[i,1]))
+                f.write('%e %e\n' % (mesh.vertices[i,0], mesh.vertices[i,1]))
             else:
-                f.write('%f %f %f\n' % (mesh.vertices[i,0], mesh.vertices[i,1], mesh.vertices[i,2]))
+                f.write('%e %e %e\n' % (mesh.vertices[i,0], mesh.vertices[i,1], mesh.vertices[i,2]))
 
         f.write('%d\n' % mesh.cells.shape[0])
         for i in range(mesh.cells.shape[0]):
@@ -91,11 +92,11 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
         f.write('%d\n' % nbc)
         for i, bc in enumerate(bcs):
             if bc.ux is not None:
-                f.write('%d 0 %f\n' % (i, bc.ux))
+                f.write('%d 0 %e\n' % (i, bc.ux))
             if bc.uy is not None:
-                f.write('%d 1 %f\n' % (i, bc.uy))
+                f.write('%d 1 %e\n' % (i, bc.uy))
             if dim==3 and bc.uz is not None:
-                f.write('%d 2 %f\n' % (i, bc.uz))
+                f.write('%d 2 %e\n' % (i, bc.uz))
         f.close()
 
         # multipoint constraints
@@ -112,11 +113,11 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
         if nmpc > 0:
             for i, mpc in enumerate(mpcs):
                 if mpc.ux is not None:
-                    f.write('%d %f %d %f %d %f\n' % (mpc.slave, 1.0, mpc.master, -1.0, 0, mpc.ux))
+                    f.write('%d %e %d %e %d %e\n' % (mpc.slave, 1.0, mpc.master, -1.0, 0, mpc.ux))
                 if mpc.uy is not None:
-                    f.write('%d %f %d %f %d %f\n' % (mpc.slave, 1.0, mpc.master, -1.0, 1, mpc.uy))
+                    f.write('%d %e %d %e %d %e\n' % (mpc.slave, 1.0, mpc.master, -1.0, 1, mpc.uy))
                 if mpc.uz is not None:
-                    f.write('%d %f %d %f %d %f\n' % (mpc.slave, 1.0, mpc.master, -1.0, 2, mpc.uz))
+                    f.write('%d %e %d %e %d %e\n' % (mpc.slave, 1.0, mpc.master, -1.0, 2, mpc.uz))
         f.close()
 
         f = open('temperature.txt', 'w')
@@ -128,13 +129,25 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
         f = open(filename, 'w')
         f.write('%d\n' % len(materials))
         for C, alpha in materials:
+            #print C
+            #print alpha
             for i in range(6):
                 for j in range(i,6):
-                   f.write('%f ' % C[i][j])
+                   f.write('%e ' % C[i][j])
             for i in range(6):
-                f.write('%f ' % alpha[i])
+                f.write('%e ' % alpha[i])
             f.write('\n')
         f.close()
+
+        # previous sol
+        filename = 'u.txt'
+        f = open(filename, 'w')
+        if prev is not None:
+            uprev = np.asarray(prev)
+        else:
+            uprev = np.zeros(dim * mesh.vertices.shape[0])
+        for u in uprev:
+            f.write('%.16e\n' % u)
 
         # run coda
         import subprocess
@@ -146,6 +159,7 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
 
         point_data={}
         point_data['U'] = _load_data('u.txt')
+        point_data['F'] = _load_data('fint.txt')
 
         cell_data={}
         cell_data['S11'] = _load_data('sig11.txt')
@@ -165,6 +179,7 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
     # remove tmp directory
     rmtree(tmpdir)
 
+    # save results to VTK format
     if output is not None:
         if not output.endswith('.vtk'):
             output += '.vtk'
@@ -175,4 +190,21 @@ def run(mesh, bcs, materials, temperature=0.0, mpcs=None, output=None, verbose=F
                                      mesh.cell_markers, cell_data = cell_data,
                                      point_data = point_data)
 
-    return cell_data
+    data = {}
+    data['U'] = point_data['U']
+    data['F'] = point_data['F']
+    data['E11'] = cell_data['E11']
+    data['E22'] = cell_data['E22']
+    data['E12'] = cell_data['E12']
+    data['S11'] = cell_data['S11']
+    data['S22'] = cell_data['S22']
+    data['S12'] = cell_data['S12']
+    if dim == 3:
+        data['E33'] = cell_data['E33']
+        data['E23'] = cell_data['E23']
+        data['E31'] = cell_data['E31']
+        data['S33'] = cell_data['S33']
+        data['S23'] = cell_data['S23']
+        data['S31'] = cell_data['S31']
+
+    return data
