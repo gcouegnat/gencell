@@ -64,12 +64,14 @@ def run(mesh, bcs, materials,
     if verbose: print 'Working in %s' % tmpdir
 
     dim = mesh.vertices.shape[1]
-    if mesh.cells.shape[0] == 3:
+
+    if mesh.cells.shape[1] == 3:
         cell_type = 'tri'
-    elif mesh.cells.shape[0] == 4:
+    elif mesh.cells.shape[1] == 4:
         cell_type = 'tet'
     else:
         cell_type = 'hex'
+
 
     with _wdir(tmpdir):
         # mesh
