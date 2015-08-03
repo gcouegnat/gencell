@@ -207,7 +207,7 @@ def medit_reader(filename):
                 tet_markers.append(int(next_line.split()[4]))
                 ntet += 1
         
-        if next_line.startswith('Hexa'):
+        if next_line.startswith('Hexahedra'):
             if len(next_line.split()) > 1:
                 num_hex = int(next_line[1])
             else:
@@ -218,13 +218,6 @@ def medit_reader(filename):
                             for coord in next_line.split()[0:8]])
                 hex_markers.append(int(next_line.split()[8]))
                 nhex += 1
-
-    #if ntet==0:
-    #vertices = [ vertice[0:2] for vertice in vertices]
-
-    #print 'Dimension: %d' % dim
-    #print 'Number of vertex: %d' % num_vertex
-    #print 'Number of cell: %d' % num_cell
 
     if nhex > 0:
         cells = hex
@@ -239,7 +232,6 @@ def medit_reader(filename):
     mesh = MeshBase()
     mesh.set_vertices(vertices)
     mesh.set_vertice_markers(markers)
-
     mesh.set_cells(cells)
     mesh.set_cell_markers(cell_markers)
 
