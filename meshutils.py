@@ -554,6 +554,9 @@ def vtk_write(filename, vertices, cells,
     elif cells.shape[1] == 4:
         cell_type = 'tetrahedron'
         cell_type_id = 10
+    elif cells.shape[1] == 8:
+        cell_type = 'hexahedron'
+        cell_type_id = 12
 
     f = open(filename, "w")
     f.write("# vtk DataFile Version 3.0\n")
@@ -574,9 +577,13 @@ def vtk_write(filename, vertices, cells,
     for i in xrange(len(cells)):
         if cell_type == 'triangle':
             f.write("3 %d %d %d\n" % (cells[i, 0], cells[i, 1], cells[i, 2]))
-        else:
+        elif cell_type == 'tetrahdron':
             f.write("4 %d %d %d %d\n" %
                     (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3]))
+        elif cell_type == 'hexahedron':
+            f.write("8 %d %d %d %d %d %d %d %d\n" %
+                    (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3], 
+                     cells[i, 4], cells[i, 5], cells[i, 6], cells[i, 7]))
 
     f.write("CELL_TYPES %d\n" % len(cells))
     for _ in xrange(len(cells)):
