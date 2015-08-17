@@ -3,14 +3,18 @@ import numpy as np
 import coda
 
 def compute_cell_volume(coords):
+    
+    npts = coords.shape[0]
     dim = coords.shape[1]
 
-    if dim==2:
+    if dim==2 and npts==3:
+        # triangle
         V = (coords[1][0] * coords[2][1] - coords[2][0] * coords[1][1])
         V += (coords[2][0] * coords[0][1] - coords[0][0] * coords[2][1])
         V += (coords[0][0] * coords[1][1] - coords[1][0] * coords[0][1])
         V *= 0.5
-    else:
+    elif dim==3 and npts==4:
+        # tetrahedron
         x21 = coords[1][0] - coords[0][0]
         x31 = coords[2][0] - coords[0][0]
         x41 = coords[3][0] - coords[0][0]
@@ -24,6 +28,9 @@ def compute_cell_volume(coords):
         V += y21 * (x41 * z31 - x31 * z41)
         V += z21 * (x31 * y41 - x41 * y31)
         V /= 6.0
+    else:
+        # voxel
+        V = 1.0
 
     return V
 
