@@ -32,12 +32,13 @@ def rotation_matrix(theta):
     c = np.cos(theta)
     s = np.sin(theta)
 
-    Q = np.array([[c*c, s*s, 0, 0, 0,  np.sqrt(2)*c*s],
-                [s*s, c*c, 0, 0, 0, -np.sqrt(2)*c*s],
-                [0, 0, 1, 0, 0, 0],
-                [0, 0, 0, c, -s, 0],
-                [0, 0, 0, s, c, 0],
-                [-np.sqrt(2)*c*s, np.sqrt(2)*c*s, 0, 0, 0, c*c-s*s]])
+    sqrt2 = np.sqrt(2.0)
+    Q = np.array([[c*c      , s*s       , 0, -sqrt2*c*s, 0 , 0]  ,
+                  [s*s      , c*c       , 0, sqrt2*c*s , 0 , 0]  ,
+                  [0        , 0         , 1, 0         , 0 , 0]  ,
+                  [sqrt2*c*s, -sqrt2*c*s, 0, c*c-s*s   , 0 , 0]  ,
+                  [0        , 0         , 0, 0         , c , s]  ,
+                  [0        , 0         , 0, 0         , -s, c]])
     
     return Q
 
