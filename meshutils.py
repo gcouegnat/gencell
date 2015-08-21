@@ -206,7 +206,7 @@ def medit_reader(filename):
                             for coord in next_line.split()[0:4]])
                 tet_markers.append(int(next_line.split()[4]))
                 ntet += 1
-        
+
         if next_line.startswith('Hexahedra'):
             if len(next_line.split()) > 1:
                 num_hex = int(next_line[1])
@@ -540,8 +540,8 @@ def medit_write(filename, vertices, cells, ids=None, vids=None):
         f.write("Hexahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
             f.write("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n" %
-                    (cells[i, 0] + 1, cells[i, 1] + 1, cells[i, 2] + 1, cells[i, 3] + 1, 
-                     cells[i, 4] + 1, cells[i, 5] + 1, cells[i, 6] + 1, cells[i, 7] + 1, 
+                    (cells[i, 0] + 1, cells[i, 1] + 1, cells[i, 2] + 1, cells[i, 3] + 1,
+                     cells[i, 4] + 1, cells[i, 5] + 1, cells[i, 6] + 1, cells[i, 7] + 1,
                      ids[i]))
 
     f.write("End")
@@ -589,7 +589,7 @@ def vtk_write(filename, vertices, cells,
                     (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3]))
         elif cell_type == 'hexahedron':
             f.write("8 %d %d %d %d %d %d %d %d\n" %
-                    (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3], 
+                    (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3],
                      cells[i, 4], cells[i, 5], cells[i, 6], cells[i, 7]))
 
     f.write("CELL_TYPES %d\n" % len(cells))
@@ -607,10 +607,19 @@ def vtk_write(filename, vertices, cells,
 
     if cell_data is not None:
         for key, data in cell_data.items():
-            f.write("SCALARS %s float 1\n" % key)
+            data_dim = len(data)/len(cells)
+            print data_dim
+
+            f.write("SCALARS %s float %d\n" % (key, data_dim))
+
             f.write("LOOKUP_TABLE default\n")
-            for i in xrange(len(data)):
-                f.write("%s\n" % data[i])
+            for i in xrange(len(cells)):
+                if data_dim == 1:
+                    f.write("%f\n" % data[i])
+                elif data_dim == 2:
+                    f.write("%f %f\n" % (data[2*i], data[2*i+1]))
+                elif data_dim == 3:
+                    f.write("%f %f %f\n" % (data[3*i], data[3*i+1], data[3*i+2]))
 
     if point_data is not None:
         f.write("POINT_DATA %d\n" % len(vertices))
