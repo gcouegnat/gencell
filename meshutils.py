@@ -530,12 +530,19 @@ def medit_write(filename, vertices, cells, ids=None, vids=None):
         f.write("Triangles\n%d\n" % cells.shape[0])
         for c, m in zip(cells, ids):
             f.write("%d\t%d\t%d\t%d\n" % (c[0] + 1, c[1] + 1, c[2] + 1, m))
-    elif cells.shape[1] == 4:
+    elif dim==3 and cells.shape[1] == 4:
         f.write("Tetrahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
             f.write("%d\t%d\t%d\t%d\t%d\n" %
                     (cells[i, 0] + 1, cells[i, 1] + 1, cells[i, 2] + 1,
                      cells[i, 3] + 1, ids[i]))
+    elif dim==3 and cells.shape[1] == 8:
+        f.write("Hexahedra\n%d\n" % cells.shape[0])
+        for i in range(len(cells)):
+            f.write("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n" %
+                    (cells[i, 0] + 1, cells[i, 1] + 1, cells[i, 2] + 1, cells[i, 3] + 1, 
+                     cells[i, 4] + 1, cells[i, 5] + 1, cells[i, 6] + 1, cells[i, 7] + 1, 
+                     ids[i]))
 
     f.write("End")
     f.close()
