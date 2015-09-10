@@ -3,7 +3,7 @@ import numpy as np
 import coda
 
 def compute_cell_volume(coords):
-    
+
     npts = coords.shape[0]
     dim = coords.shape[1]
 
@@ -113,11 +113,12 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         Ceff[2,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[2,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[2,2] = volumic_average(mesh, gp_data['S12'])
+        
         # Thermal
-        bc_west = coda.DirichletBC(west, ux=0.0, uy=0.0)
-        bc_east = coda.DirichletBC(east,ux=0.0, uy=0.0)
-        bc_south= coda.DirichletBC(south, ux=0.0, uy=0.0)
-        bc_north = coda.DirichletBC(north, ux=0.0, uy=0.0)
+        bc_west = coda.DirichletBC(west, ux=0.0)
+        bc_east = coda.DirichletBC(east,ux=0.0)
+        bc_south= coda.DirichletBC(south,  uy=0.0)
+        bc_north = coda.DirichletBC(north, uy=0.0)
         bcs = [bc_west, bc_east, bc_south, bc_north]
         gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(3))
         sig = [ volumic_average(mesh, gp_data['S11']),
@@ -221,12 +222,18 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         Ceff[5,4] = volumic_average(mesh, gp_data['S23'])
         Ceff[5,5] = volumic_average(mesh, gp_data['S31'])
         # Thermal
-        bc_east = coda.DirichletBC(east, ux=0, uy=0, uz=0)
-        bc_west = coda.DirichletBC(west, ux=0, uy=0, uz=0)
-        bc_south= coda.DirichletBC(south, ux=0, uy=0, uz=0)
-        bc_north = coda.DirichletBC(north, ux=0, uy=0, uz=0)
-        bc_bottom = coda.DirichletBC(bottom, ux=0, uy=0, uz=0)
-        bc_top = coda.DirichletBC(top, ux=0, uy=0, uz=0)
+        # bc_east = coda.DirichletBC(east, ux=0, uy=0, uz=0)
+        # bc_west = coda.DirichletBC(west, ux=0, uy=0, uz=0)
+        # bc_south= coda.DirichletBC(south, ux=0, uy=0, uz=0)
+        # bc_north = coda.DirichletBC(north, ux=0, uy=0, uz=0)
+        # bc_bottom = coda.DirichletBC(bottom, ux=0, uy=0, uz=0)
+        # bc_top = coda.DirichletBC(top, ux=0, uy=0, uz=0)
+        bc_east = coda.DirichletBC(east, ux=0)
+        bc_west = coda.DirichletBC(west, ux=0)
+        bc_south= coda.DirichletBC(south, uy=0)
+        bc_north = coda.DirichletBC(north, uy=0)
+        bc_bottom = coda.DirichletBC(bottom, uz=0)
+        bc_top = coda.DirichletBC(top, uz=0)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
         gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(6))
         sig = [volumic_average(mesh, gp_data['S11']),
@@ -281,6 +288,13 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
             Ceff[k,0] = volumic_average(mesh, gp_data['S11'])
             Ceff[k,1] = volumic_average(mesh, gp_data['S22'])
             Ceff[k,2] = volumic_average(mesh, gp_data['S12'])
+    
+        # Thermal
+        bcs = [coda.DirichletBC(contour, ux=0, uy=0), ]
+        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(6))
+        sig = [volumic_average(mesh, gp_data['S11']),
+               volumic_average(mesh, gp_data['S22']),
+               volumic_average(mesh, gp_data['S12'])]
     else:
         lz = xmax[2] - xmin[2]
         Ceff = np.zeros((6,6))
@@ -290,9 +304,12 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
                    (np.abs(mesh.vertices[:,1] - xmax[1]) < tol) +
                    (np.abs(mesh.vertices[:,2] - xmin[2]) < tol) +
                    (np.abs(mesh.vertices[:,2] - xmax[2]) < tol))
+        
+        # Mechanical
         for k in range(6):
             emacro = [0., 0., 0., 0., 0., 0.]
             emacro[k] = 0.01
+
             bcs=[]
             for p in contour[0]:
                 bc = coda.DirichletBC(([p],), ux=emacro[0]*mesh.vertices[p,0]+0.5*emacro[3]*mesh.vertices[p,1]+0.5*emacro[5]*mesh.vertices[p,2],
@@ -308,9 +325,19 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
             Ceff[k,4] = volumic_average(mesh, gp_data['S23'])
             Ceff[k,5] = volumic_average(mesh, gp_data['S31'])
 
+        # Thermal
+        bcs = [coda.DirichletBC(contour, ux=0, uy=0, uz=0), ]
+        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(3))
+        sig = [volumic_average(mesh, gp_data['S11']),
+               volumic_average(mesh, gp_data['S22']),
+               volumic_average(mesh, gp_data['S33']),
+               volumic_average(mesh, gp_data['S12']),
+               volumic_average(mesh, gp_data['S23']),
+               volumic_average(mesh, gp_data['S31'])]
 
+    # Output
     Ceff = 0.5e2*(Ceff + Ceff.transpose())
-    aeff = 0.0
+    aeff = -0.01 * np.dot(np.linalg.inv(Ceff), sig)
 
     return Ceff, aeff
 
@@ -611,8 +638,65 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
             Ceff[k,5] = volumic_average(mesh, gp_data['S31'])
 
 
+        # Thermal case:
+        bc_c0 = coda.DirichletBC(c0, ux=0.0, uy=0.0, uz=0.0)
+        bc_c1 = coda.DirichletBC(c1, ux=0.0, uy=0.0, uz=0.0)
+        bc_c2 = coda.DirichletBC(c2, ux=0.0, uy=0.0, uz=0.0)
+        bc_c3 = coda.DirichletBC(c3, ux=0.0, uy=0.0, uz=0.0)
+
+        bc_c4 = coda.DirichletBC(c4, ux=0.0, uy=0.0, uz=0.0)
+        bc_c5 = coda.DirichletBC(c5, ux=0.0, uy=0.0, uz=0.0)
+        bc_c6 = coda.DirichletBC(c6, ux=0.0, uy=0.0, uz=0.0)
+        bc_c7 = coda.DirichletBC(c7, ux=0.0, uy=0.0, uz=0.0)
+
+        bcs = [bc_c0, bc_c1, bc_c2, bc_c3,
+               bc_c4, bc_c5, bc_c6, bc_c7]
+
+
+        mpcs=[]
+        for i in xrange(len(e0)):
+            mpc2 = coda.MPC(e0[i], e2[i], ux=0.0, uy=0.0, uz=0.0)
+            mpc4 = coda.MPC(e0[i], e4[i], ux=0.0, uy=0.0, uz=0.0)
+            mpc6 = coda.MPC(e0[i], e6[i], ux=0.0, uy=0.0, uz=0.0)
+            mpcs.append(mpc2)
+            mpcs.append(mpc4)
+            mpcs.append(mpc6)
+        for i in xrange(len(e1)):
+            mpc3 = coda.MPC(e1[i], e3[i], ux=0.0, uy=0.0, uz=0.0)
+            mpc5 = coda.MPC(e1[i], e5[i], ux=0.0, uy=0.0, uz=0.0)
+            mpc7 = coda.MPC(e1[i], e7[i], ux=0.0, uy=0.0, uz=0.0)
+            mpcs.append(mpc3)
+            mpcs.append(mpc5)
+            mpcs.append(mpc7)
+        for i in xrange(len(e8)):
+            mpc9 = coda.MPC(e8[i], e9[i], ux=0.0, uy=0.0, uz=0.0)
+            mpc10 = coda.MPC(e8[i], e10[i], ux=0.0, uy=0.0, uz=0.0)
+            mpc11 = coda.MPC(e8[i], e11[i], ux=0.0, uy=0.0, uz=0.0)
+            mpcs.append(mpc9)
+            mpcs.append(mpc10)
+            mpcs.append(mpc11)
+
+        for i in xrange(len(f0)):
+            mpc0 = coda.MPC(f0[i], f1[i], ux=0.0, uy=0.0, uz=0.0)
+            mpcs.append(mpc0)
+        for i in xrange(len(f2)):
+            mpc2 = coda.MPC(f2[i], f3[i],  ux=0.0, uy=0.0, uz=0.0)
+            mpcs.append(mpc2)
+        for i in xrange(len(f4)):
+            mpc2 = coda.MPC(f4[i], f5[i],  ux=0.0, uy=0.0, uz=0.0)
+            mpcs.append(mpc2)
+
+        gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, temperature=100.0, output=output_name(6))
+        sig = [volumic_average(mesh, gp_data['S11']),
+               volumic_average(mesh, gp_data['S22']),
+               volumic_average(mesh, gp_data['S33']),
+               volumic_average(mesh, gp_data['S12']),
+               volumic_average(mesh, gp_data['S23']),
+               volumic_average(mesh, gp_data['S31'])]
+
+    # Output
     Ceff = 0.5e2*(Ceff + Ceff.transpose())
-    aeff = 0.0
+    aeff = -0.01 * np.dot(np.linalg.inv(Ceff), sig)
 
     return Ceff, aeff
 
