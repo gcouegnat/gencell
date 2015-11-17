@@ -151,6 +151,10 @@ def medit_reader(filename):
     tri = []
     tri_markers = []
     ntri = 0
+    
+    quad = []
+    quad_markers = []
+    nquad = 0
 
     tet = []
     tet_markers = []
@@ -193,7 +197,19 @@ def medit_reader(filename):
                             for coord in next_line.split()[0:3]])
                 tri_markers.append(int(next_line.split()[3]))
                 ntri += 1
-
+        
+        if next_line.startswith('Quadri'):
+            if len(next_line.split()) > 1:
+                num_quad = int(next_line[1])
+            else:
+                num_quad = int(get_next_line(f).split()[0])
+            for i in range(num_quad):
+                next_line = get_next_line(f)
+                quad.append([int(coord) - 1
+                            for coord in next_line.split()[0:4]])
+                quad_markers.append(int(next_line.split()[4]))
+                nquad += 1
+        
         if next_line.startswith('Tetrahedra'):
             if len(next_line.split()) > 1:
                 num_tet = int(next_line[1])
@@ -224,6 +240,9 @@ def medit_reader(filename):
     elif ntet > 0:
         cells = tet
         cell_markers = tet_markers
+    elif nquad > 0:
+        cells = quad
+        cell_markers = quad_markers
     else:
         cells = tri
         cell_markers = tri_markers
@@ -525,10 +544,14 @@ def medit_write(filename, vertices, cells, ids=None, vids=None):
         elif dim == 3:
             f.write("%f\t%f\t%f\t%d\n" % (v[0], v[1], v[2], m))
 
-    if cells.shape[1] == 3:
+    if dim == 2 and cells.shape[1] == 3:
         f.write("Triangles\n%d\n" % cells.shape[0])
         for c, m in zip(cells, ids):
             f.write("%d\t%d\t%d\t%d\n" % (c[0] + 1, c[1] + 1, c[2] + 1, m))
+    elif dim == 2 and cells.shape[1] == 4:
+        f.write("Quadrilaterals\n%d\n" % cells.shape[0])
+        for c, m in zip(cells, ids):
+            f.write("%d\t%d\t%d\t%d\t%d\n" % (c[0] + 1, c[1] + 1, c[2] + 1, c[3] + 1, m))
     elif dim==3 and cells.shape[1] == 4:
         f.write("Tetrahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
@@ -717,6 +740,8 @@ def abaqus_write(filename, vertices, cells, ids, nsets=None, cell_type=None):
     if cell_type is None:
         if dim == 2 and cells.shape[1] == 3:
             cell_type = 'CPS3'
+        elif dim == 2 and cells.shape[1] == 4:
+            cell_type = 'CPS4'
         elif dim == 3 and cells.shape[1] == 4:
             cell_type = 'C3D4'
         else:
