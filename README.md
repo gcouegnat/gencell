@@ -1,3 +1,7 @@
-# gencell library
+# gencell 
 
-    git clone http://avalon.lcts.fr/git/lcts/gencell.git
+To clone the repository:
+
+``` sh
+git clone http://avalon.lcts.fr/git/lcts/gencell.git
+```
