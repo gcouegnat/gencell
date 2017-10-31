@@ -49,7 +49,9 @@ def _load_data(filename):
     return [float(value) for value in data.split()]
 
 
-def run(mesh, bcs, materials,
+def run(mesh,
+        bcs,
+        materials,
         temperature=0.0,
         sig=None,
         mpcs=None,
@@ -61,7 +63,8 @@ def run(mesh, bcs, materials,
     from shutil import rmtree
 
     tmpdir = mkdtemp()
-    if verbose: print 'Working in %s' % tmpdir
+    if verbose:
+        print 'Working in %s' % tmpdir
 
     dim = mesh.vertices.shape[1]
 
@@ -72,7 +75,6 @@ def run(mesh, bcs, materials,
     else:
         cell_type = 'hex'
 
-
     with _wdir(tmpdir):
         # mesh
         filename = 'mesh.txt'
@@ -82,16 +84,16 @@ def run(mesh, bcs, materials,
             if dim == 2:
                 f.write('%e %e\n' % (mesh.vertices[i, 0], mesh.vertices[i, 1]))
             else:
-                f.write('%e %e %e\n' % (mesh.vertices[i, 0],
-                                        mesh.vertices[i, 1],
-                                        mesh.vertices[i, 2]))
+                f.write('%e %e %e\n' %
+                        (mesh.vertices[i, 0], mesh.vertices[i, 1],
+                         mesh.vertices[i, 2]))
 
         f.write('%d\n' % mesh.cells.shape[0])
         for i in range(mesh.cells.shape[0]):
             if cell_type == 'tri':
-                f.write('%d %d %d %d\n' % (mesh.cells[i, 0], mesh.cells[i, 1],
-                                           mesh.cells[i, 2],
-                                           mesh.cell_markers[i]))
+                f.write('%d %d %d %d\n' %
+                        (mesh.cells[i, 0], mesh.cells[i, 1], mesh.cells[i, 2],
+                         mesh.cell_markers[i]))
             elif cell_type == 'tet':
                 f.write('%d %d %d %d %d\n' %
                         (mesh.cells[i, 0], mesh.cells[i, 1], mesh.cells[i, 2],
@@ -136,9 +138,12 @@ def run(mesh, bcs, materials,
         nmpc = 0
         if mpcs is not None:
             for mpc in mpcs:
-                if mpc.ux is not None: nmpc += 1
-                if mpc.uy is not None: nmpc += 1
-                if dim == 3 and mpc.uz is not None: nmpc += 1
+                if mpc.ux is not None:
+                    nmpc += 1
+                if mpc.uy is not None:
+                    nmpc += 1
+                if dim == 3 and mpc.uz is not None:
+                    nmpc += 1
 
         f = open('mpc.txt', 'w')
         f.write('%d\n' % nmpc)
@@ -197,18 +202,17 @@ def run(mesh, bcs, materials,
 
         # run coda
         import subprocess
-        
+
         if cell_type == 'tri':
             cmdline = ['fea2d']
         elif cell_type == 'tet':
             cmdline = ['fea3d']
         else:
             cmdline = ['fea3d_hexa']
-        
+
         if not verbose:
-            subprocess.call(cmdline,
-                            stderr=subprocess.PIPE,
-                            stdout=subprocess.PIPE)
+            subprocess.call(
+                cmdline, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         else:
             subprocess.call(cmdline)
 
@@ -240,10 +244,15 @@ def run(mesh, bcs, materials,
             output += '.vtk'
 
         from gencell.meshutils import vtk_write
-        if verbose: print 'Writing output'
-        vtk_write(output, mesh.vertices, mesh.cells, mesh.cell_markers,
-                  cell_data=cell_data,
-                  point_data=point_data)
+        if verbose:
+            print 'Writing output'
+        vtk_write(
+            output,
+            mesh.vertices,
+            mesh.cells,
+            mesh.cell_markers,
+            cell_data=cell_data,
+            point_data=point_data)
 
     data = {}
     data['U'] = point_data['U']

@@ -139,13 +139,30 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uz=0.0)
         bc_top = coda.DirichletBC(top, uz=0.0)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
+
+
+        # emacro = [0.01, 0, 0, 0, 0, 0]
+        # uguess = []
+        # for p in xrange(len(mesh.vertices)):
+        #     ux=emacro[0]*mesh.vertices[p,0]+0.5*emacro[3]*mesh.vertices[p,1]+0.5*emacro[5]*mesh.vertices[p,2]
+        #     uy=0.5*emacro[3]*mesh.vertices[p,0]+emacro[1]*mesh.vertices[p,1]+0.5*emacro[4]*mesh.vertices[p,2]
+        #     uz=0.5*emacro[5]*mesh.vertices[p,0]+0.5*emacro[4]*mesh.vertices[p,1]+emacro[2]*mesh.vertices[p,2]
+        #     uguess.append((ux,uy,uz))
+        # uguess = np.asarray(uguess).ravel()
+        # gp_data = coda.run(mesh, bcs, materials, output=output_name(0), prev=uguess)
+        
         gp_data = coda.run(mesh, bcs, materials, output=output_name(0))
+        
         Ceff[0,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[0,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[0,2] = volumic_average(mesh, gp_data['S33'])
         Ceff[0,3] = volumic_average(mesh, gp_data['S12'])
         Ceff[0,4] = volumic_average(mesh, gp_data['S23'])
         Ceff[0,5] = volumic_average(mesh, gp_data['S31'])
+        
+        
+        
+        
         # Tensile 2
         bc_west = coda.DirichletBC(west, ux=0.0)
         bc_east = coda.DirichletBC(east, ux=0.0)
@@ -629,7 +646,18 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
                 mpc2 = coda.MPC(f4[i], f5[i],  ux=0.5*emacro[3]*ly, uy=emacro[1]*ly, uz=0.5*emacro[4]*ly)
                 mpcs.append(mpc2)
 
-            gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, output=output_name(k))
+
+
+            uguess = []
+            for p in xrange(len(mesh.vertices)):
+                ux=emacro[0]*mesh.vertices[p,0]+0.5*emacro[3]*mesh.vertices[p,1]+0.5*emacro[5]*mesh.vertices[p,2]
+                uy=0.5*emacro[3]*mesh.vertices[p,0]+emacro[1]*mesh.vertices[p,1]+0.5*emacro[4]*mesh.vertices[p,2]
+                uz=0.5*emacro[5]*mesh.vertices[p,0]+0.5*emacro[4]*mesh.vertices[p,1]+emacro[2]*mesh.vertices[p,2]
+                uguess.append((ux,uy,uz))
+            uguess = np.asarray(uguess).ravel()
+
+            gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, output=output_name(k), prev=uguess)
+            # gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, output=output_name(k))
             Ceff[k,0] = volumic_average(mesh, gp_data['S11'])
             Ceff[k,1] = volumic_average(mesh, gp_data['S22'])
             Ceff[k,2] = volumic_average(mesh, gp_data['S33'])
