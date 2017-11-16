@@ -513,7 +513,7 @@ def merge_meshes(m1, m2, tol=1.0e-6):
         if marker[i] > -1:
             marker[i] = np
             np += 1
-    old_vertices = m.vertices
+    
     m.vertices = m.vertices[marker > -1]
     for i, c in enumerate(m.cells):
         m.cells[i] = [marker[v] for v in c]

@@ -109,18 +109,3 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
             old_len = len(mesh.cells)
 
     return mesh
-
-
-if __name__ == "__main__":
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    v = np.array([(0.0,0.0),(1.0,0.0),(1.0,1.0),(0.0,1.0)])
-    e = [(0,1),(1,2),(2,3),(3,0)]
-
-    mesh = triangle(v, e, min_angle=30, max_area=0.0001)
-    mesh.save("square.mesh")
-    #mesh.save('random_mesh.pdf')
-
-

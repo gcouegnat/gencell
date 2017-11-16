@@ -1,11 +1,10 @@
-import feutils
 import coda
-import meshutils
 import fetools
-
-import utils
+import feutils
 import mesher
-import triangle
-import tetgen
-import yams
+import meshutils
 import mshint
+import tetgen
+import triangle
+import utils
+import yams

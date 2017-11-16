@@ -1,12 +1,12 @@
-from meshutils import MeshBase
 from subprocess import call
 from tempfile import mktemp
+from .meshutils import MeshBase
+
 
 def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False, refine_faces=True, user_size=None):
-
     filename=mktemp()
     smesh.save(filename+'.mesh')
-    
+
     opts = "-pzA"
 
     if min_ratio:
@@ -14,7 +14,7 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
 
     if not min_ratio and quality:
         opts += "q"
-    
+
     if max_volume:
         opts += "a%.16f" % max_volume
 
@@ -50,7 +50,6 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
     mesh.set_cells(cells)
 
     if user_size:
-        
         opts = '-ra'
         if quality:
             opts += 'q'
@@ -61,7 +60,6 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
         else:
             opts += "Q"
 
-
         old_len = len(mesh.cells)
         for loop in range(1,10):
             area = user_size(mesh)
@@ -70,7 +68,7 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
             for i, a in enumerate(area):
                 f.write('%d %f\n' % (i, a))
             f.close()
-            
+
             cmdline = ["tetgen", opts, "%s.%d" % (filename, loop)]
             print cmdline
             call(cmdline)
@@ -99,18 +97,3 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
             old_len = len(mesh.cells)
 
     return mesh
-    
-
-#if __name__ == "__main__":
-
-    #import numpy as np
-    #import matplotlib.pyplot as plt
-
-    #v = np.array([(0.0,0.0),(1.0,0.0),(1.0,1.0),(0.0,1.0)])
-    #e = [(0,1),(1,2),(2,3),(3,0)]
-
-    #mesh = triangle(v, e, min_angle=30, max_area=0.0001)
-    #mesh.save("square.mesh")
-    ##mesh.save('random_mesh.pdf')
-
-

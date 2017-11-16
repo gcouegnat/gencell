@@ -49,15 +49,7 @@ def _load_data(filename):
     return [float(value) for value in data.split()]
 
 
-def run(mesh,
-        bcs,
-        materials,
-        temperature=0.0,
-        sig=None,
-        mpcs=None,
-        output=None,
-        verbose=True,
-        prev=None):
+def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None, verbose=True, prev=None):
 
     from tempfile import mkdtemp
     from shutil import rmtree
@@ -96,13 +88,12 @@ def run(mesh,
                          mesh.cell_markers[i]))
             elif cell_type == 'tet':
                 f.write('%d %d %d %d %d\n' %
-                        (mesh.cells[i, 0], mesh.cells[i, 1], mesh.cells[i, 2],
-                         mesh.cells[i, 3], mesh.cell_markers[i]))
+                        (mesh.cells[i, 0], mesh.cells[i, 1], mesh.cells[i, 2], mesh.cells[i, 3],
+                         mesh.cell_markers[i]))
             else:
                 f.write('%d %d %d %d %d %d %d %d %d\n' %
-                        (mesh.cells[i, 0], mesh.cells[i, 1], mesh.cells[i, 2],
-                         mesh.cells[i, 3], mesh.cells[i, 4], mesh.cells[i, 5],
-                         mesh.cells[i, 6], mesh.cells[i, 7],
+                        (mesh.cells[i, 0], mesh.cells[i, 1], mesh.cells[i, 2], mesh.cells[i, 3],
+                         mesh.cells[i, 4], mesh.cells[i, 5], mesh.cells[i, 6], mesh.cells[i, 7],
                          mesh.cell_markers[i]))
 
         f.write('%d\n' % len(bcs))
@@ -169,8 +160,6 @@ def run(mesh,
         f = open(filename, 'w')
         f.write('%d\n' % len(materials))
         for C, alpha in materials:
-            #print C
-            #print alpha
             for i in range(6):
                 for j in range(i, 6):
                     f.write('%e ' % C[i][j])
