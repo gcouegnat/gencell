@@ -425,8 +425,8 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
         lz = xmax[2] - xmin[2]
         Ceff = np.zeros((6,6))
 
-         # corners
-         c0 = np.where((np.abs(mesh.vertices[:,0] - xmin[0]) < tol) *
+        # corners
+        c0 = np.where((np.abs(mesh.vertices[:,0] - xmin[0]) < tol) *
                        (np.abs(mesh.vertices[:,1] - xmin[1]) < tol) *
                        (np.abs(mesh.vertices[:,2] - xmin[2]) < tol))
 
