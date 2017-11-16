@@ -2,15 +2,11 @@ import numpy as np
 
 
 class MeshBase():
-    def __init__(self,
-                 vertices=None,
-                 cells=None,
-                 cell_markers=None,
-                 vertice_markers=None):
-        self.vertices = vertices
-        self.cells = cells
-        self.vertice_markers = vertice_markers
-        self.cell_markers = cell_markers
+    def __init__(self, vertices=None, cells=None, cell_markers=None, vertex_markers=None):
+        self.vertices = np.asarray(vertices)
+        self.cells = np.asarray(cells)
+        self.vertex_markers = np.asarray(vertex_markers)
+        self.cell_markers = np.asarray(cell_markers)
 
     def set_vertices(self, vertices):
         self.vertices = np.array(vertices, dtype="float")
@@ -28,11 +24,9 @@ class MeshBase():
         if markers is not None:
             self.set_cell_markers(markers)
 
-    def set_vertice_markers(self, markers):
+    def set_vertex_markers(self, markers):
         assert (len(markers) == len(self.vertices))
-        self.vertice_markers = np.array(markers, dtype="int")
-        # for i, mark in enumerate(markers):
-        # self.vertice_markers[i] = mark
+        self.vertex_markers = np.array(markers, dtype="int")
 
     def set_cell_markers(self, markers):
         assert (len(markers) == len(self.cells))
@@ -47,7 +41,7 @@ class MeshBase():
         ext = filename.split(".")[-1]
         if ext == "mesh":
             medit_write(filename, self.vertices, self.cells, self.cell_markers,
-                        self.vertice_markers)
+                        self.vertex_markers)
         elif ext == "vtk":
             vtk_write(filename, self.vertices, self.cells, self.cell_markers)
         elif ext == "geof":
@@ -118,17 +112,17 @@ class MeshBase():
                 self.vertices[cell[2]] - self.vertices[cell[0]])
             lc += l / 3.0
 
-            #ax = self.vertices[cell[0],0]
-            #ay = self.vertices[cell[0],1]
-            #bx = self.vertices[cell[1],0]
-            #by = self.vertices[cell[1],1]
-            #cx = self.vertices[cell[2],0]
-            #cy = self.vertices[cell[2],1]
-            #A = 0.5*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by))
-            #l = np.sqrt(4.0/np.sqrt(3)*A)
-            #lc += l
-
         return lc / len(self.cells)
+
+    def remove_orphan_vertices(self):
+
+        uvertices = np.unique(np.ravel(self.cells))
+        idx = -1 * np.ones(len(self.vertices), dtype=int)
+        idx[uvertices] = np.arange(len(uvertices))
+        self.vertices = self.vertices[idx > -1]
+        if self.vertex_markers is not None:
+            self.vertex_markers = self.vertex_markers[idx > -1]
+        self.cells = idx[self.cells]
 
 
 def medit_reader(filename):
@@ -248,7 +242,7 @@ def medit_reader(filename):
 
     mesh = MeshBase()
     mesh.set_vertices(vertices)
-    mesh.set_vertice_markers(markers)
+    mesh.set_vertex_markers(markers)
     mesh.set_cells(cells)
     mesh.set_cell_markers(cell_markers)
 
@@ -513,7 +507,7 @@ def merge_meshes(m1, m2, tol=1.0e-6):
         if marker[i] > -1:
             marker[i] = np
             np += 1
-    
+
     m.vertices = m.vertices[marker > -1]
     for i, c in enumerate(m.cells):
         m.cells[i] = [marker[v] for v in c]
