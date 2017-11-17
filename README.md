@@ -3,5 +3,5 @@
 To clone the repository:
 
 ``` sh
-git clone http://avalon.lcts.fr/git/lcts/gencell.git
+git clone http://avalon.lcts.fr/git/dev/gencell.git
 ```
