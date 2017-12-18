@@ -5,8 +5,14 @@ class MeshBase():
     def __init__(self, vertices=None, cells=None, cell_markers=None, vertex_markers=None):
         self.vertices = np.asarray(vertices)
         self.cells = np.asarray(cells)
-        self.vertex_markers = np.asarray(vertex_markers)
-        self.cell_markers = np.asarray(cell_markers)
+        if vertex_markers:
+            self.vertex_markers = np.asarray(vertex_markers)
+        else:
+            self.vertex_markers = None
+        if cell_markers:
+            self.cell_markers = np.asarray(cell_markers)
+        else:
+            self.cell_markers = None
 
     def set_vertices(self, vertices):
         self.vertices = np.array(vertices, dtype="float")
