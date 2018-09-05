@@ -805,7 +805,7 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
             f.write('*nset, nset=zmax\n')
             _write_by_line(f, nset + 1)
 
-        f.write('*nset, nset=nall, generate\n')
+        f.write('*nset, nset=all, generate\n')
         f.write('1, %d\n' % len(vertices))
 
     if nsets:
