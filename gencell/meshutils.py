@@ -779,34 +779,33 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
     xmax = np.max(vertices, axis=0)
     tol = 1e-4
 
-    if not nsets:
-        nset = np.where(np.abs(vertices[:, 0] - xmin[0]) < tol)[0]
-        f.write('*nset, nset=xmin\n')
+    nset = np.where(np.abs(vertices[:, 0] - xmin[0]) < tol)[0]
+    f.write('*nset, nset=xmin\n')
+    _write_by_line(f, nset + 1)
+
+    nset = np.where(np.abs(vertices[:, 0] - xmax[0]) < tol)[0]
+    f.write('*nset, nset=xmax\n')
+    _write_by_line(f, nset + 1)
+
+    nset = np.where(np.abs(vertices[:, 1] - xmin[1]) < tol)[0]
+    f.write('*nset, nset=ymin\n')
+    _write_by_line(f, nset + 1)
+
+    nset = np.where(np.abs(vertices[:, 1] - xmax[1]) < tol)[0]
+    f.write('*nset, nset=ymax\n')
+    _write_by_line(f, nset + 1)
+
+    if dim == 3:
+        nset = np.where(np.abs(vertices[:, 2] - xmin[2]) < tol)[0]
+        f.write('*nset, nset=zmin\n')
         _write_by_line(f, nset + 1)
 
-        nset = np.where(np.abs(vertices[:, 0] - xmax[0]) < tol)[0]
-        f.write('*nset, nset=xmax\n')
+        nset = np.where(np.abs(vertices[:, 2] - xmax[2]) < tol)[0]
+        f.write('*nset, nset=zmax\n')
         _write_by_line(f, nset + 1)
 
-        nset = np.where(np.abs(vertices[:, 1] - xmin[1]) < tol)[0]
-        f.write('*nset, nset=ymin\n')
-        _write_by_line(f, nset + 1)
-
-        nset = np.where(np.abs(vertices[:, 1] - xmax[1]) < tol)[0]
-        f.write('*nset, nset=ymax\n')
-        _write_by_line(f, nset + 1)
-
-        if dim == 3:
-            nset = np.where(np.abs(vertices[:, 2] - xmin[2]) < tol)[0]
-            f.write('*nset, nset=zmin\n')
-            _write_by_line(f, nset + 1)
-
-            nset = np.where(np.abs(vertices[:, 2] - xmax[2]) < tol)[0]
-            f.write('*nset, nset=zmax\n')
-            _write_by_line(f, nset + 1)
-
-        f.write('*nset, nset=all, generate\n')
-        f.write('1, %d\n' % len(vertices))
+    f.write('*nset, nset=all, generate\n')
+    f.write('1, %d\n' % len(vertices))
 
     if nsets:
         for key, value in nsets.iteritems():
