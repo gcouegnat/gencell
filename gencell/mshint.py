@@ -3,14 +3,14 @@ from subprocess import call
 from tempfile import mktemp
 
 
-def write_sol(filename, u):
+def write_sol(filename, u, dim=2):
     ''' 
     Write a scalar field to *.sol format (Medit) 
     <http://www.math.u-bordeaux1.fr/~dobrzyns/logiciels/RT-422/node58.html>
     '''
     sol = open(filename, 'w')
     sol.write('MeshVersionFormatted 1\n')
-    sol.write('Dimension\n2\n')
+    sol.write('Dimension %d\n' % dim)
     sol.write('SolAtVertices\n%d\n' % len(u))
     sol.write('1 1\n')
     for val in u:
