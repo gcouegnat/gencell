@@ -56,7 +56,7 @@ def volumic_average(mesh, data):
     return acc
 
 
-def compute_effective_properties_PMUBC(mesh, materials, output=None):
+def compute_effective_properties_PMUBC(mesh, materials, output=None, verbose=True):
     """
     Compute effective properties of a rectangular cell using Periodicty
     compatible Mixed Unfiform Boundary Conditions (PMUBC) [1]_.
@@ -151,7 +151,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uz=0.0)
         bc_top = coda.DirichletBC(top, uz=0.0)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, output=output_name(0))
+        gp_data = coda.run(mesh, bcs, materials, output=output_name(0), verbose=verbose)
         Ceff[0,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[0,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[0,2] = volumic_average(mesh, gp_data['S33'])
@@ -167,7 +167,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uz=0.0)
         bc_top = coda.DirichletBC(top, uz=0.0)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, output=output_name(1))
+        gp_data = coda.run(mesh, bcs, materials, output=output_name(1), verbose=verbose)
         Ceff[1,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[1,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[1,2] = volumic_average(mesh, gp_data['S33'])
@@ -183,7 +183,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uz=0.0)
         bc_top = coda.DirichletBC(top, uz=0.01*lz)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, output=output_name(2))
+        gp_data = coda.run(mesh, bcs, materials, output=output_name(2), verbose=verbose)
         Ceff[2,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[2,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[2,2] = volumic_average(mesh, gp_data['S33'])
@@ -199,7 +199,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uz=0)
         bc_top = coda.DirichletBC(top, uz=0)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, output=output_name(3))
+        gp_data = coda.run(mesh, bcs, materials, output=output_name(3), verbose=verbose)
         Ceff[3,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[3,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[3,2] = volumic_average(mesh, gp_data['S33'])
@@ -215,7 +215,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uy=0.0)
         bc_top = coda.DirichletBC(top, uy=0.005*lz)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, output=output_name(4))
+        gp_data = coda.run(mesh, bcs, materials, output=output_name(4), verbose=verbose)
         Ceff[4,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[4,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[4,2] = volumic_average(mesh, gp_data['S33'])
@@ -231,7 +231,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, ux=0.0)
         bc_top = coda.DirichletBC(top, ux=0.005*lz)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, output=output_name(5))
+        gp_data = coda.run(mesh, bcs, materials, output=output_name(5), verbose=verbose)
         Ceff[5,0] = volumic_average(mesh, gp_data['S11'])
         Ceff[5,1] = volumic_average(mesh, gp_data['S22'])
         Ceff[5,2] = volumic_average(mesh, gp_data['S33'])
@@ -247,7 +247,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None):
         bc_bottom = coda.DirichletBC(bottom, uz=0)
         bc_top = coda.DirichletBC(top, uz=0)
         bcs = [bc_west, bc_east, bc_south, bc_north, bc_bottom, bc_top]
-        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(6))
+        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(6), verbose=verbose)
         sig = [volumic_average(mesh, gp_data['S11']),
                volumic_average(mesh, gp_data['S22']),
                volumic_average(mesh, gp_data['S33']),
@@ -270,7 +270,9 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
             return None
 
     dim = mesh.vertices.shape[1]
-    tol = 1e-4
+    tol = 1e-6
+
+    print dim
 
     # Compute cell volume for latter volume averaging
     mesh.cell_volumes = np.zeros((len(mesh.cells)))
@@ -305,7 +307,7 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
 
         # Thermal
         bcs = [coda.DirichletBC(contour, ux=0, uy=0), ]
-        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(6))
+        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(3))
         sig = [volumic_average(mesh, gp_data['S11']),
                volumic_average(mesh, gp_data['S22']),
                volumic_average(mesh, gp_data['S12'])]
@@ -341,7 +343,7 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
 
         # Thermal
         bcs = [coda.DirichletBC(contour, ux=0, uy=0, uz=0), ]
-        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(3))
+        gp_data = coda.run(mesh, bcs, materials, temperature=100.0, output=output_name(6))
         sig = [volumic_average(mesh, gp_data['S11']),
                volumic_average(mesh, gp_data['S22']),
                volumic_average(mesh, gp_data['S33']),
