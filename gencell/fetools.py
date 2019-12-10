@@ -12,6 +12,15 @@ def compute_cell_volume(coords):
         V += (coords[2][0] * coords[0][1] - coords[0][0] * coords[2][1])
         V += (coords[0][0] * coords[1][1] - coords[1][0] * coords[0][1])
         V *= 0.5
+    elif dim == 3 and npts == 3:
+        p1 = np.array(coords[0])
+        p2 = np.array(coords[1])
+        p3 = np.array(coords[2])
+        a = np.linalg.norm(p1 - p2)
+        b = np.linalg.norm(p2 - p3)
+        c = np.linalg.norm(p3 - p1)
+        s = 0.5*(a+b+c)
+        V = np.sqrt(s*(s-a)*(s-b)*(s-c))
     elif dim == 3 and npts == 4:
         # tetrahedron
         x21 = coords[1][0] - coords[0][0]
