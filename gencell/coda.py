@@ -21,6 +21,25 @@ class DirichletBC():
     def set_uz(self, uz):
         self.uz = uz
 
+class LoadBC():
+    def __init__(self, vertices=None, fx=None, fy=None, fz=None):
+        self.vertices = vertices
+        self.fx = fx
+        self.fy = fy
+        self.fz = fz
+
+    def set_vertices(self, vertices):
+        self.vertices = vertices
+
+    def set_fx(self, fx):
+        self.fx = fx
+
+    def set_fy(self, fy):
+        self.fy = fy
+
+    def set_fz(self, fz):
+        self.fz = fz
+
 
 class MPC():
     def __init__(self, slave=None, master=None, ux=None, uy=None, uz=None):
@@ -49,7 +68,7 @@ def _load_data(filename):
     return [float(value) for value in data.split()]
 
 
-def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None, verbose=True, prev=None):
+def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, loads=None, output=None, verbose=True, prev=None):
 
     from tempfile import mkdtemp
     from shutil import rmtree
@@ -96,12 +115,23 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None,
                          mesh.cells[i, 4], mesh.cells[i, 5], mesh.cells[i, 6], mesh.cells[i, 7],
                          mesh.cell_markers[i]))
 
-        f.write('%d\n' % len(bcs))
+        # nsets
+        nnset = len(bcs)
+        if loads is not None:
+            nnset += len(loads)
+
+        f.write('%d\n' % nnset)
         for bc in bcs:
             vertices = bc.vertices[0]
             f.write('%d\n' % len(vertices))
             for vertex in vertices:
                 f.write('%d\n' % vertex)
+        if loads is not None:
+            for load in loads:
+                vertices = load.vertices[0]
+                f.write('%d\n' % len(vertices))
+                for vertex in vertices:
+                    f.write('%d\n' % vertex)
         f.close()
 
         # boundary conditions
@@ -124,6 +154,31 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None,
             if dim == 3 and bc.uz is not None:
                 f.write('%d 2 %e\n' % (i, bc.uz))
         f.close()
+
+        # loads
+        nload = 0
+        if loads is not None:
+            for load in loads:
+                if load.fx is not None:
+                    nload += 1
+                if load.fy is not None:
+                    nload += 1
+                if dim == 3 and load.uz is not None:
+                    nload += 1
+
+        f = open('load.txt', 'w')
+        f.write('%d\n' % nload)
+        if nload > 0:
+            for i, load in enumerate(loads):
+                if load.fx is not None:
+                    f.write('%d 0 %e\n' % (i+len(bcs), load.fx))
+                if load.fy is not None:
+                    f.write('%d 1 %e\n' % (i+len(bcs), load.fy))
+                if dim == 3 and load.fz is not None:
+                    f.write('%d 2 %e\n' % (i+len(bcs), load.fz))
+        f.close()
+
+
 
         # multipoint constraints
         nmpc = 0
@@ -216,6 +271,12 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None,
         cell_data['E11'] = _load_data('eto11.txt')
         cell_data['E22'] = _load_data('eto22.txt')
         cell_data['E12'] = _load_data('eto12.txt')
+        cell_data['EEL11'] = _load_data('eel11.txt')
+        cell_data['EEL22'] = _load_data('eel22.txt')
+        cell_data['EEL12'] = _load_data('eel12.txt')
+        cell_data['ETH11'] = _load_data('eth11.txt')
+        cell_data['ETH22'] = _load_data('eth22.txt')
+        cell_data['ETH12'] = _load_data('eth12.txt')
         if dim == 3:
             cell_data['S33'] = _load_data('sig33.txt')
             cell_data['S23'] = _load_data('sig23.txt')
@@ -225,7 +286,7 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None,
             cell_data['E31'] = _load_data('eto31.txt')
 
     # remove tmp directory
-    rmtree(tmpdir)
+    # rmtree(tmpdir)
 
     # save results to VTK format
     if output is not None:
@@ -249,6 +310,12 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, output=None,
     data['E11'] = cell_data['E11']
     data['E22'] = cell_data['E22']
     data['E12'] = cell_data['E12']
+    data['EEL11'] = cell_data['EEL11']
+    data['EEL22'] = cell_data['EEL22']
+    data['EEL12'] = cell_data['EEL12']
+    data['ETH11'] = cell_data['ETH11']
+    data['ETH22'] = cell_data['ETH22']
+    data['ETH12'] = cell_data['ETH12']
     data['S11'] = cell_data['S11']
     data['S22'] = cell_data['S22']
     data['S12'] = cell_data['S12']
