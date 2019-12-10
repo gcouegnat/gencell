@@ -60,6 +60,8 @@ class MeshBase():
                           self.cell_markers)
         elif ext == "pdf":
             pdf_write(filename, self.vertices, self.cells, self.cell_markers)
+        elif ext == "bdf":
+            nastran_write(filename, self.vertices, self.cells, self.vertex_markers, self.cell_markers)
         else:
             raise ValueError, "Unknown mesh type: %s" % ext
 
@@ -813,3 +815,27 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
             _write_by_line(f, value + 1)
 
     f.close()
+
+
+def nastran_write(filename, vertices, cells, tags=None, ids=None):
+
+    if tags is None:
+        tags = np.zeros(len(vertices))
+
+    if ids is None:
+        ids = np.zeros(len(cells))
+
+    nv = len(vertices)
+
+    with open(filename, 'w') as f:
+        f.write('$ Created by meshutils.py\n')
+        for k, (v,t) in enumerate(zip(vertices, tags)):
+            f.write('%-8s%16d%16d%16.6e%16.6e%-8s\n%-8s%16.6e\n' % ('GRID*',k+1, 0, v[0], v[1], '*', '*', v[2]))
+        # for k, (c,i) in enumerate(zip(cells, ids)):
+        #     f.write('%-8s%16d%16d%16d%16d%-8s\n%-8s%16d%16d\n' % ('CTETRA*', k, i, c[0], c[1], '*N%d' % (k + nv), '*N%d' % (k + nv), c[2], c[3]))
+        for k, (c,i) in enumerate(zip(cells, ids)):
+            f.write('%-8s%8d%8d%8d%8d%8d%8d\n' % ('CTETRA', k+1, i, c[0]+1, c[1]+1, c[2]+1, c[3]+1))
+            
+        f.write('ENDDATA\n')
+        
+
