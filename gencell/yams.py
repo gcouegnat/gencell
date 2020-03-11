@@ -1,11 +1,11 @@
-from meshutils import MeshBase, read_mesh
+from .meshutils import MeshBase, read_mesh
 from subprocess import call
 from tempfile import mktemp
 
 def yams(mesh, option=1, hmin=None, hmax=None, gradation=None, metric=None, smoothing=True, verbose=False, memory=1000):
 
     filename=mktemp()
-    print filename
+    print(filename)
     mesh.save(filename + '.mesh')
 
     cmdline = ['yams']

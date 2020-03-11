@@ -28,20 +28,20 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
 
     cmdline = ["tetgen", opts, filename + ".mesh"]
 
-    print cmdline
+    print(cmdline)
     call(cmdline)
 
     f=open(filename+'.1.node','r')
     num_vertices = int(f.readline().split()[0])
     vertices = []
-    for i in xrange(num_vertices):
+    for i in range(num_vertices):
         vertices.append([float(coord) for coord in f.readline().split()[1:4]])
     f.close()
 
     f=open(filename+'.1.ele','r')
     num_cells = int(f.readline().split()[0])
     cells = []
-    for i in xrange(num_cells):
+    for i in range(num_cells):
         cells.append([int(vertice) for vertice in f.readline().split()[1:5]])
     f.close()
 
@@ -70,20 +70,20 @@ def tetgen(smesh, quality=False, max_volume=None, min_ratio=None, verbose=False,
             f.close()
 
             cmdline = ["tetgen", opts, "%s.%d" % (filename, loop)]
-            print cmdline
+            print(cmdline)
             call(cmdline)
 
             f=open('%s.%d.node' % (filename, loop+1),'r')
             num_vertices = int(f.readline().split()[0])
             vertices = []
-            for i in xrange(num_vertices):
+            for i in range(num_vertices):
                 vertices.append([float(coord) for coord in f.readline().split()[1:4]])
             f.close()
 
             f=open('%s.%d.ele' % (filename, loop+1), 'r')
             num_cells = int(f.readline().split()[0])
             cells = []
-            for i in xrange(num_cells):
+            for i in range(num_cells):
                 cells.append([int(vertice) for vertice in f.readline().split()[1:5]])
             f.close()
 

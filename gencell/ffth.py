@@ -46,7 +46,7 @@ def run(filename, nx, ny, nz, materials, phases, loading, temperature=0, nthread
     os.environ['OMP_NUM_THREADS'] = str(nthreads)
     cmd = 'ffth --input %s --nx %d --ny %d --nz %d --material %s --phase %s --loading %s --temperature %e' % (filename, nx, ny, nz, 'mat.inp', 'phases.inp', 'load.inp', temperature)
 
-    print cmd
+    print(cmd)
     subprocess.call(cmd, shell=True)
 
     sig = np.loadtxt('res.out')

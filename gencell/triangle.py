@@ -1,4 +1,4 @@
-from meshutils import MeshBase
+from .meshutils import MeshBase
 from subprocess import call
 from tempfile import mktemp
 
@@ -44,14 +44,14 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
     f=open(filename+'.1.node','r')
     num_vertices = int(f.readline().split()[0])
     vertices = []
-    for i in xrange(num_vertices):
+    for i in range(num_vertices):
         vertices.append([float(coord) for coord in f.readline().split()[1:3]])
     f.close()
 
     f=open(filename+'.1.ele','r')
     num_cells = int(f.readline().split()[0])
     cells = []
-    for i in xrange(num_cells):
+    for i in range(num_cells):
         cells.append([int(vertice) for vertice in f.readline().split()[1:]])
     f.close()
 
@@ -66,7 +66,7 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
 
         for loop in range(1,10):
 
-            print ('Adapting mesh: iteration %d' % loop)
+            print(('Adapting mesh: iteration %d' % loop))
             area = user_size(mesh)
 
             f=open('%s.%d.area' % (filename, loop),'w')
@@ -83,14 +83,14 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
             f=open('%s.%d.node' % (filename, loop+1),'r')
             num_vertices = int(f.readline().split()[0])
             vertices = []
-            for i in xrange(num_vertices):
+            for i in range(num_vertices):
                 vertices.append([float(coord) for coord in f.readline().split()[1:3]])
             f.close()
 
             f=open('%s.%d.ele' % (filename, loop+1), 'r')
             num_cells = int(f.readline().split()[0])
             cells = []
-            for i in xrange(num_cells):
+            for i in range(num_cells):
                 cells.append([int(vertice) for vertice in f.readline().split()[1:]])
             f.close()
 
@@ -98,10 +98,10 @@ def triangle(vertices, edges, quality=False, max_area=None, min_angle=None, verb
             mesh.set_vertices(vertices)
             mesh.set_cells(cells)
 
-            print '   %d cells' % len(mesh.cells)
+            print('   %d cells' % len(mesh.cells))
 
             ratio = 1.0*abs(old_len - len(mesh.cells))/old_len
-            print ratio
+            print(ratio)
 
             if ratio < 0.01:
                 break

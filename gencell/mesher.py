@@ -8,7 +8,7 @@ def _smooth(coords, iterations, closed=False):
     if iterations <= 0:
         return coords
 
-    for it in xrange(iterations):
+    for it in range(iterations):
         depl = coords[1:-1,:] - 0.5 * (coords[0:-2,:] + coords[2:,:])
         coords[1:-1,:] += 0.4 * depl
         depl = coords[1:-1,:] - 0.5 * (coords[0:-2,:] + coords[2:,:])
@@ -96,23 +96,23 @@ def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3, max_area=None):
     vertices=[]
     nx,ny = img.shape
 
-    print '*** Detecting image contours'
+    print('*** Detecting image contours')
     
     import skimage.measure
     val = np.unique(img).astype('float')
     val = val[::-1]
     level = 0.5*(val[0] + val[1])
-    print 'level: ', level
+    print('level: ', level)
     contours =  skimage.measure.find_contours(img, level=level)
     if len(contours)==1:
         contours = [contours, ]
     for i in range(1, len(val)-1):
         level = 0.5*(val[i] + val[i+1])
-        print 'level:', level
+        print('level:', level)
         new_contours =  skimage.measure.find_contours(img, level=level)
         contours.extend(new_contours) # = np.hstack((contours, new_contours))
 
-    print '*** Approximating pixels chains'
+    print('*** Approximating pixels chains')
     for contour in contours:
         pts = np.array(contour, 'float')
         if pts.shape[0] > 4:
@@ -135,12 +135,12 @@ def create_mesh_from_image(img, smooth_iter=1000, tolerance=1.3, max_area=None):
     vertices.append((float(nx-1),float(ny-1)))
     vertices.append((0.0, float(ny-1)))
 
-    print '*** Meshing'
+    print('*** Meshing')
     mesh = triangle(vertices, edges) #, quality=True) #, min_angle=30.0, max_area=max_area)
 
     print("*** Assigning materials")
     ids=[]
-    for i in xrange(len(mesh.cells)):
+    for i in range(len(mesh.cells)):
         xc = 0.333333333*(mesh.vertices[mesh.cells[i][0]][0]
             + mesh.vertices[mesh.cells[i][1]][0]
             + mesh.vertices[mesh.cells[i][2]][0])

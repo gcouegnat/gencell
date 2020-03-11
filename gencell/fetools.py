@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-import coda
+from . import coda
 
 
 def compute_cell_volume(coords):
@@ -47,7 +47,7 @@ def compute_cell_volume(coords):
 
 def volumic_average(mesh, data):
     acc = 0.0
-    for i in xrange(len(data)):
+    for i in range(len(data)):
         acc += data[i] * mesh.cell_volumes[i]
     xmin = np.min(mesh.vertices, axis=0)
     xmax = np.max(mesh.vertices, axis=0)
@@ -76,7 +76,7 @@ def compute_effective_properties_PMUBC(mesh, materials, output=None, verbose=Tru
 
     # Compute cell volume for latter volume averaging
     mesh.cell_volumes = np.zeros((len(mesh.cells)))
-    for i in xrange(len(mesh.cells)):
+    for i in range(len(mesh.cells)):
         mesh.cell_volumes[i] = compute_cell_volume(mesh.vertices[mesh.cells[i]])
 
     # BCs
@@ -272,11 +272,11 @@ def compute_effective_properties_KUBC(mesh, materials, output=None):
     dim = mesh.vertices.shape[1]
     tol = 1e-6
 
-    print dim
+    print(dim)
 
     # Compute cell volume for latter volume averaging
     mesh.cell_volumes = np.zeros((len(mesh.cells)))
-    for i in xrange(len(mesh.cells)):
+    for i in range(len(mesh.cells)):
         mesh.cell_volumes[i] = compute_cell_volume(mesh.vertices[mesh.cells[i]])
 
     # BCs
@@ -371,7 +371,7 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
 
     # Compute cell volume for latter volume averaging
     mesh.cell_volumes = np.zeros((len(mesh.cells)))
-    for i in xrange(len(mesh.cells)):
+    for i in range(len(mesh.cells)):
         mesh.cell_volumes[i] = compute_cell_volume(mesh.vertices[mesh.cells[i]])
 
     # BCs
@@ -414,11 +414,11 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
             emacro[k] = 0.01
 
             mpcs=[]
-            for i in xrange(len(west)):
+            for i in range(len(west)):
                 mpc0 = coda.MPC(west[i], east[i], ux=emacro[0]*lx, uy=0.5*emacro[2]*lx)
                 mpcs.append(mpc0)
 
-            for i in xrange(len(south)):
+            for i in range(len(south)):
                 mpc1 = coda.MPC(south[i], north[i], ux=0.5*emacro[2]*ly, uy=emacro[1]*ly)
                 mpcs.append(mpc1)
 
@@ -608,21 +608,21 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
                    bc_c4, bc_c5, bc_c6, bc_c7]
 
             mpcs=[]
-            for i in xrange(len(e0)):
+            for i in range(len(e0)):
                 mpc2 = coda.MPC(e0[i], e2[i], ux=0.5*emacro[3]*ly, uy=emacro[1]*ly, uz=0.5*emacro[4]*ly)
                 mpc4 = coda.MPC(e0[i], e4[i], ux=0.5*emacro[5]*lz, uy=0.5*emacro[4]*lz, uz=emacro[2]*lz)
                 mpc6 = coda.MPC(e0[i], e6[i], ux=0.5*emacro[3]*ly+0.5*emacro[5]*lz, uy=emacro[1]*ly+0.5*emacro[4]*lz, uz=0.5*emacro[4]*ly+emacro[2]*lz)
                 mpcs.append(mpc2)
                 mpcs.append(mpc4)
                 mpcs.append(mpc6)
-            for i in xrange(len(e1)):
+            for i in range(len(e1)):
                 mpc3 = coda.MPC(e1[i], e3[i], ux=-emacro[0]*lx, uy=-0.5*emacro[3]*lx, uz=-0.5*emacro[5]*lx)
                 mpc5 = coda.MPC(e1[i], e5[i], ux=0.5*emacro[5]*lz, uy=0.5*emacro[4]*lz, uz=emacro[2]*lz)
                 mpc7 = coda.MPC(e1[i], e7[i], ux=-emacro[0]*lx+0.5*emacro[5]*lz, uy=-0.5*emacro[3]*lx+0.5*emacro[4]*lz, uz=-0.5*emacro[5]*lx+emacro[2]*lz)
                 mpcs.append(mpc3)
                 mpcs.append(mpc5)
                 mpcs.append(mpc7)
-            for i in xrange(len(e8)):
+            for i in range(len(e8)):
                 mpc9 = coda.MPC(e8[i], e9[i], ux=emacro[0]*lx, uy=0.5*emacro[3]*lx, uz=0.5*emacro[5]*lx)
                 mpc10 = coda.MPC(e8[i], e10[i], ux=emacro[0]*lx+0.5*emacro[3]*ly, uy=0.5*emacro[3]*lx+emacro[1]*ly, uz=0.5*emacro[5]*lx+0.5*emacro[4]*ly)
                 mpc11 = coda.MPC(e8[i], e11[i], ux=0.5*emacro[3]*ly, uy=emacro[1]*ly, uz=0.5*emacro[4]*ly)
@@ -630,18 +630,18 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
                 mpcs.append(mpc10)
                 mpcs.append(mpc11)
 
-            for i in xrange(len(f0)):
+            for i in range(len(f0)):
                 mpc0 = coda.MPC(f0[i], f1[i], ux=0.5*emacro[5]*lz, uy=0.5*emacro[4]*lz, uz=emacro[2]*lz)
                 mpcs.append(mpc0)
-            for i in xrange(len(f2)):
+            for i in range(len(f2)):
                 mpc2 = coda.MPC(f2[i], f3[i],  ux=emacro[0]*lx, uy=0.5*emacro[3]*lx, uz=0.5*emacro[5]*lx)
                 mpcs.append(mpc2)
-            for i in xrange(len(f4)):
+            for i in range(len(f4)):
                 mpc2 = coda.MPC(f4[i], f5[i],  ux=0.5*emacro[3]*ly, uy=emacro[1]*ly, uz=0.5*emacro[4]*ly)
                 mpcs.append(mpc2)
             
             uguess = []
-            for p in xrange(len(mesh.vertices)):
+            for p in range(len(mesh.vertices)):
                 ux=emacro[0]*mesh.vertices[p,0]+0.5*emacro[3]*mesh.vertices[p,1]+0.5*emacro[5]*mesh.vertices[p,2]
                 uy=0.5*emacro[3]*mesh.vertices[p,0]+emacro[1]*mesh.vertices[p,1]+0.5*emacro[4]*mesh.vertices[p,2]
                 uz=0.5*emacro[5]*mesh.vertices[p,0]+0.5*emacro[4]*mesh.vertices[p,1]+emacro[2]*mesh.vertices[p,2]
@@ -671,21 +671,21 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
                bc_c4, bc_c5, bc_c6, bc_c7]
 
         mpcs=[]
-        for i in xrange(len(e0)):
+        for i in range(len(e0)):
             mpc2 = coda.MPC(e0[i], e2[i], ux=0.0, uy=0.0, uz=0.0)
             mpc4 = coda.MPC(e0[i], e4[i], ux=0.0, uy=0.0, uz=0.0)
             mpc6 = coda.MPC(e0[i], e6[i], ux=0.0, uy=0.0, uz=0.0)
             mpcs.append(mpc2)
             mpcs.append(mpc4)
             mpcs.append(mpc6)
-        for i in xrange(len(e1)):
+        for i in range(len(e1)):
             mpc3 = coda.MPC(e1[i], e3[i], ux=0.0, uy=0.0, uz=0.0)
             mpc5 = coda.MPC(e1[i], e5[i], ux=0.0, uy=0.0, uz=0.0)
             mpc7 = coda.MPC(e1[i], e7[i], ux=0.0, uy=0.0, uz=0.0)
             mpcs.append(mpc3)
             mpcs.append(mpc5)
             mpcs.append(mpc7)
-        for i in xrange(len(e8)):
+        for i in range(len(e8)):
             mpc9 = coda.MPC(e8[i], e9[i], ux=0.0, uy=0.0, uz=0.0)
             mpc10 = coda.MPC(e8[i], e10[i], ux=0.0, uy=0.0, uz=0.0)
             mpc11 = coda.MPC(e8[i], e11[i], ux=0.0, uy=0.0, uz=0.0)
@@ -693,13 +693,13 @@ def compute_effective_properties_PBC(mesh, materials, output=None):
             mpcs.append(mpc10)
             mpcs.append(mpc11)
 
-        for i in xrange(len(f0)):
+        for i in range(len(f0)):
             mpc0 = coda.MPC(f0[i], f1[i], ux=0.0, uy=0.0, uz=0.0)
             mpcs.append(mpc0)
-        for i in xrange(len(f2)):
+        for i in range(len(f2)):
             mpc2 = coda.MPC(f2[i], f3[i],  ux=0.0, uy=0.0, uz=0.0)
             mpcs.append(mpc2)
-        for i in xrange(len(f4)):
+        for i in range(len(f4)):
             mpc2 = coda.MPC(f4[i], f5[i],  ux=0.0, uy=0.0, uz=0.0)
             mpcs.append(mpc2)
 
@@ -759,11 +759,11 @@ def impose_periodic_strain(mesh, materials, emacro, output=None, verbose=False):
         north = north[np.argsort(mesh.vertices[north,0])]
 
         mpcs=[]
-        for i in xrange(len(west)):
+        for i in range(len(west)):
             mpc0 = coda.MPC(west[i], east[i], ux=emacro[0]*lx, uy=0.5*emacro[2]*lx)
             mpcs.append(mpc0)
 
-        for i in xrange(len(south)):
+        for i in range(len(south)):
             mpc1 = coda.MPC(south[i], north[i], ux=0.5*emacro[2]*ly, uy=emacro[1]*ly)
             mpcs.append(mpc1)
 
@@ -775,7 +775,7 @@ def impose_periodic_strain(mesh, materials, emacro, output=None, verbose=False):
         gp_data = coda.run(mesh, bcs, materials, mpcs=mpcs, output=output, verbose=verbose)
 
     else:
-        print 'Not implemented in dim=3'
+        print('Not implemented in dim=3')
         sys.exit(1)
 
     return gp_data

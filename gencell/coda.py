@@ -75,7 +75,7 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, loads=None, 
 
     tmpdir = mkdtemp()
     if verbose:
-        print 'Working in %s' % tmpdir
+        print('Working in %s' % tmpdir)
 
     dim = mesh.vertices.shape[1]
 
@@ -238,7 +238,7 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, loads=None, 
         f = open(filename, 'w')
         if sig is not None:
             f.write('%d\n' % mesh.cells.shape[0])
-            for i in xrange(mesh.cells.shape[0]):
+            for i in range(mesh.cells.shape[0]):
                 f.write('%e %e %e\n' % (sig[i, 0], sig[i, 1], sig[i, 2]))
         else:
             f.write('0\n')
@@ -295,7 +295,7 @@ def run(mesh, bcs, materials, temperature=0.0, sig=None, mpcs=None, loads=None, 
 
         from gencell.meshutils import vtk_write
         if verbose:
-            print 'Writing output'
+            print('Writing output')
         vtk_write(
             output,
             mesh.vertices,

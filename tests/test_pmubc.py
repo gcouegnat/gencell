@@ -9,5 +9,5 @@ mat = [(isotropic_stiffness(E=100e3, nu=0.2),
        ]
 
 Ceff, aeff = compute_effective_properties_PMUBC(m, mat)
-print Ceff
-print aeff
+print(Ceff)
+print(aeff)

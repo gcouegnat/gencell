@@ -63,7 +63,7 @@ class MeshBase():
         elif ext == "bdf":
             nastran_write(filename, self.vertices, self.cells, self.vertex_markers, self.cell_markers)
         else:
-            raise ValueError, "Unknown mesh type: %s" % ext
+            raise ValueError("Unknown mesh type: %s" % ext)
 
     def renumber_cell_markers(self, reverse=False):
         unique_markers, indices = np.unique(self.cell_markers,
@@ -78,7 +78,7 @@ class MeshBase():
 
         dim = self.vertices.shape[1]
         if dim == 3:
-            raise ValueError, "Not implemented for dim == 3"
+            raise ValueError("Not implemented for dim == 3")
 
         old_vertices = self.vertices
         old_cells = self.cells
@@ -262,7 +262,7 @@ def read_mesh(filename):
     if ext == 'mesh':
         return medit_reader(filename)
     else:
-        raise ValueError, "Unknown mesh type: %s" % ext
+        raise ValueError("Unknown mesh type: %s" % ext)
 
 
 def extrude_mesh(mesh, offset=None, subdivisions=None):
@@ -295,7 +295,7 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
         return c
 
     lc = mesh.characteristic_length()
-    print lc
+    print(lc)
 
     if offset is not None and subdivisions is not None:
         delta_z = offset / subdivisions
@@ -306,7 +306,7 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
         delta_z = lc
         offset = delta_z * subdivisions
 
-    print delta_z, offset
+    print(delta_z, offset)
 
     nvert = len(mesh.vertices)
     ncell = len(mesh.cells)
@@ -318,7 +318,7 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
     c = np.zeros((nt * subdivisions, 4), dtype='int')
     m = np.zeros((nt * subdivisions), dtype='int')
 
-    for i in xrange(ncell):
+    for i in range(ncell):
         (v0, v1, v2) = mesh.cells[i]
         conn = _get_connectivity(
             (v0, v1, v2, v0 + nvert, v1 + nvert, v2 + nvert))
@@ -327,7 +327,7 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
         c[3 * i + 2] = conn[2]
         m[3 * i:3 * i + 3] = mesh.cell_markers[i]
 
-    for i in xrange(1, subdivisions):
+    for i in range(1, subdivisions):
         v[i * nvert:(i + 1) * nvert, 2] = i * delta_z
         c[i * nt:(i + 1) * nt] = c[(i - 1) * nt:i * nt] + nvert
         m[i * nt:(i + 1) * nt] = m[(i - 1) * nt:i * nt]
@@ -491,7 +491,7 @@ def merge_meshes(m1, m2, tol=1.0e-6):
         n = vi + vj * nx + vk * (nx * ny)
         box[n].append(i)
 
-    new_num = range(len(m.vertices))
+    new_num = list(range(len(m.vertices)))
     for b in box:
         if len(b) > 1:
             for i in range(len(b) - 1):
@@ -596,7 +596,7 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
     f.write("DATASET UNSTRUCTURED_GRID\n")
 
     f.write("POINTS %d float\n" % len(vertices))
-    for i in xrange(len(vertices)):
+    for i in range(len(vertices)):
         if dim == 2:
             f.write("%f %f %f\n" % (vertices[i, 0], vertices[i, 1], 0.0))
         else:
@@ -605,7 +605,7 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
 
     f.write("CELLS %d %d\n" % (len(cells), (cells.shape[1] + 1) * len(cells)))
 
-    for i in xrange(len(cells)):
+    for i in range(len(cells)):
         if cell_type == 'triangle':
             f.write("3 %d %d %d\n" % (cells[i, 0], cells[i, 1], cells[i, 2]))
         elif cell_type == 'tetrahedron' or cell_type == 'quadrilateral':
@@ -617,7 +617,7 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
                      cells[i, 4], cells[i, 5], cells[i, 6], cells[i, 7]))
 
     f.write("CELL_TYPES %d\n" % len(cells))
-    for _ in xrange(len(cells)):
+    for _ in range(len(cells)):
         f.write("%d\n" % cell_type_id)
 
     if ids is not None or cell_data is not None:
@@ -630,11 +630,11 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
             f.write("%s\n" % mark)
 
     if cell_data is not None:
-        for key, data in cell_data.items():
+        for key, data in list(cell_data.items()):
             data_dim = len(data)/len(cells)
             f.write("SCALARS %s float %d\n" % (key, data_dim))
             f.write("LOOKUP_TABLE default\n")
-            for i in xrange(len(cells)):
+            for i in range(len(cells)):
                 if data_dim == 1:
                     f.write("%e\n" % data[i])
                 elif data_dim == 2:
@@ -644,12 +644,12 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
 
     if point_data is not None:
         f.write("POINT_DATA %d\n" % len(vertices))
-        for key, data in point_data.items():
+        for key, data in list(point_data.items()):
 
             if len(data) > len(vertices):
                 f.write("SCALARS %s float 3\n" % key)
                 f.write("LOOKUP_TABLE default\n")
-                for i in xrange(len(vertices)):
+                for i in range(len(vertices)):
                     if dim == 2:
                         f.write("%e %e %e\n" %
                                 (data[2 * i], data[2 * i + 1], 0))
@@ -659,7 +659,7 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
             else:
                 f.write("SCALARS %s float 1\n" % key)
                 f.write("LOOKUP_TABLE default\n")
-                for i in xrange(len(vertices)):
+                for i in range(len(vertices)):
                     f.write("%e\n" % (data[i]))
 
     f.close()
@@ -720,7 +720,7 @@ def zebulon_write(filename, vertices, cells):
 def _write_by_line(f, data, max_per_line=8, sep=","):
     out = ""
     nline = len(data) / max_per_line
-    for k in xrange(nline):
+    for k in range(nline):
         out += "".join("%d%s " % (x, sep)
                        for x in data[k * max_per_line:(k + 1) * max_per_line])
         out += "\n"
@@ -745,7 +745,7 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
         elif dim == 3 and cells.shape[1] == 8:
             cell_type = 'c3d8'
         else:
-            raise ValueError, "Unknown element type in dim  %s" % dim
+            raise ValueError("Unknown element type in dim  %s" % dim)
 
     f = open(filename, 'w')
 
@@ -772,7 +772,7 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
             elem = np.where(ids == idx)[0] + 1
             _write_by_line(f, elem)
     elif elsets:
-        for key, value in elsets.iteritems():
+        for key, value in elsets.items():
             f.write('*elset, elset=%s\n' % key)
             _write_by_line(f, value + 1)
 
@@ -810,7 +810,7 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
     f.write('1, %d\n' % len(vertices))
 
     if nsets:
-        for key, value in nsets.iteritems():
+        for key, value in nsets.items():
             f.write('*nset, nset=%s\n' % key)
             _write_by_line(f, value + 1)
 
