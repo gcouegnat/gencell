@@ -1,8 +1,10 @@
 import numpy as np
 
 
-class MeshBase():
-    def __init__(self, vertices=None, cells=None, cell_markers=None, vertex_markers=None):
+class MeshBase:
+    def __init__(
+        self, vertices=None, cells=None, cell_markers=None, vertex_markers=None
+    ):
         self.vertices = np.asarray(vertices)
         self.cells = np.asarray(cells)
         if vertex_markers:
@@ -21,21 +23,21 @@ class MeshBase():
 
     def set_cells(self, cells, markers=None):
         if markers is not None:
-            assert (len(markers) == len(cells))
+            assert len(markers) == len(cells)
 
         self.cells = np.array(cells, dtype="int")
-        #for i, cell in enumerate(cells):
-        #self.cells[i] = cell
+        # for i, cell in enumerate(cells):
+        # self.cells[i] = cell
 
         if markers is not None:
             self.set_cell_markers(markers)
 
     def set_vertex_markers(self, markers):
-        assert (len(markers) == len(self.vertices))
+        assert len(markers) == len(self.vertices)
         self.vertex_markers = np.array(markers, dtype="int")
 
     def set_cell_markers(self, markers):
-        assert (len(markers) == len(self.cells))
+        assert len(markers) == len(self.cells)
         self.cell_markers = np.array(markers, dtype="int")
         # for i, mark in enumerate(markers):
         # self.cell_markers[i] = mark
@@ -46,28 +48,36 @@ class MeshBase():
     def save(self, filename):
         ext = filename.split(".")[-1]
         if ext == "mesh":
-            medit_write(filename, self.vertices, self.cells, self.cell_markers,
-                        self.vertex_markers)
+            medit_write(
+                filename,
+                self.vertices,
+                self.cells,
+                self.cell_markers,
+                self.vertex_markers,
+            )
         elif ext == "vtk":
             vtk_write(filename, self.vertices, self.cells, self.cell_markers)
         elif ext == "geof":
             zebulon_write(filename, self.vertices, self.cells)
         elif ext == "inp":
-            abaqus_write(filename, self.vertices, self.cells,
-                         self.cell_markers)
+            abaqus_write(filename, self.vertices, self.cells, self.cell_markers)
         elif ext == "gnu":
-            gnuplot_write(filename, self.vertices, self.cells,
-                          self.cell_markers)
+            gnuplot_write(filename, self.vertices, self.cells, self.cell_markers)
         elif ext == "pdf":
             pdf_write(filename, self.vertices, self.cells, self.cell_markers)
         elif ext == "bdf":
-            nastran_write(filename, self.vertices, self.cells, self.vertex_markers, self.cell_markers)
+            nastran_write(
+                filename,
+                self.vertices,
+                self.cells,
+                self.vertex_markers,
+                self.cell_markers,
+            )
         else:
             raise ValueError("Unknown mesh type: %s" % ext)
 
     def renumber_cell_markers(self, reverse=False):
-        unique_markers, indices = np.unique(self.cell_markers,
-                                            return_inverse=True)
+        unique_markers, indices = np.unique(self.cell_markers, return_inverse=True)
         if reverse:
             num_unique_markers = len(unique_markers) - 1
             self.cell_markers = num_unique_markers - indices
@@ -114,10 +124,8 @@ class MeshBase():
         lc = 0.0
         for cell in self.cells:
             l = np.linalg.norm(self.vertices[cell[0]] - self.vertices[cell[1]])
-            l += np.linalg.norm(
-                self.vertices[cell[1]] - self.vertices[cell[2]])
-            l += np.linalg.norm(
-                self.vertices[cell[2]] - self.vertices[cell[0]])
+            l += np.linalg.norm(self.vertices[cell[1]] - self.vertices[cell[2]])
+            l += np.linalg.norm(self.vertices[cell[2]] - self.vertices[cell[0]])
             lc += l / 3.0
 
         return lc / len(self.cells)
@@ -144,7 +152,7 @@ def medit_reader(filename):
             else:
                 return next_line.strip()
 
-    f = open(filename, 'r')
+    f = open(filename, "r")
 
     vertices = []
     markers = []
@@ -170,68 +178,63 @@ def medit_reader(filename):
         if not next_line:
             break
 
-        if next_line.startswith('Dimension'):
+        if next_line.startswith("Dimension"):
             if len(next_line.split()) > 1:
                 dim = int(next_line.split()[1])
             else:
                 dim = int(get_next_line(f).split()[0])
 
-        if next_line.startswith('Vertices'):
+        if next_line.startswith("Vertices"):
             if len(next_line.split()) > 1:
                 num_vertex = int(next_line[1])
             else:
                 num_vertex = int(get_next_line(f).split()[0])
             for i in range(num_vertex):
                 next_line = get_next_line(f)
-                vertices.append([float(coord)
-                                 for coord in next_line.split()[0:dim]])
+                vertices.append([float(coord) for coord in next_line.split()[0:dim]])
                 markers.append(int(next_line.split()[dim]))
 
-        if next_line.startswith('Triangles'):
+        if next_line.startswith("Triangles"):
             if len(next_line.split()) > 1:
                 num_tri = int(next_line[1])
             else:
                 num_tri = int(get_next_line(f).split()[0])
             for i in range(num_tri):
                 next_line = get_next_line(f)
-                tri.append([int(coord) - 1
-                            for coord in next_line.split()[0:3]])
+                tri.append([int(coord) - 1 for coord in next_line.split()[0:3]])
                 tri_markers.append(int(next_line.split()[3]))
                 ntri += 1
 
-        if next_line.startswith('Quadri'):
+        if next_line.startswith("Quadri"):
             if len(next_line.split()) > 1:
                 num_quad = int(next_line[1])
             else:
                 num_quad = int(get_next_line(f).split()[0])
             for i in range(num_quad):
                 next_line = get_next_line(f)
-                quad.append([int(coord) - 1
-                            for coord in next_line.split()[0:4]])
+                quad.append([int(coord) - 1 for coord in next_line.split()[0:4]])
                 quad_markers.append(int(next_line.split()[4]))
                 nquad += 1
 
-        if next_line.startswith('Tetrahedra'):
+        if next_line.startswith("Tetrahedra"):
             if len(next_line.split()) > 1:
                 num_tet = int(next_line[1])
             else:
                 num_tet = int(get_next_line(f).split()[0])
             for i in range(num_tet):
                 next_line = get_next_line(f)
-                tet.append([int(coord) - 1
-                            for coord in next_line.split()[0:4]])
+                tet.append([int(coord) - 1 for coord in next_line.split()[0:4]])
                 tet_markers.append(int(next_line.split()[4]))
                 ntet += 1
 
-        if next_line.startswith('Hexahedra'):
+        if next_line.startswith("Hexahedra"):
             if len(next_line.split()) > 1:
                 num_hex = int(next_line[1])
             else:
                 num_hex = int(get_next_line(f).split()[0])
             for i in range(num_hex):
                 next_line = get_next_line(f)
-                hex.append([int(coord) - 1
-                            for coord in next_line.split()[0:8]])
+                hex.append([int(coord) - 1 for coord in next_line.split()[0:8]])
                 hex_markers.append(int(next_line.split()[8]))
                 nhex += 1
 
@@ -258,8 +261,8 @@ def medit_reader(filename):
 
 
 def read_mesh(filename):
-    ext = filename.split('.')[-1]
-    if ext == 'mesh':
+    ext = filename.split(".")[-1]
+    if ext == "mesh":
         return medit_reader(filename)
     else:
         raise ValueError("Unknown mesh type: %s" % ext)
@@ -287,11 +290,17 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
             v = (v[5], v[4], v[3], v[2], v[1], v[0])
 
         if min(v[1], v[5]) < min(v[2], v[4]):
-            c = ([v[0], v[1], v[2], v[5]], [v[0], v[1], v[5], v[4]],
-                 [v[0], v[4], v[5], v[3]])
+            c = (
+                [v[0], v[1], v[2], v[5]],
+                [v[0], v[1], v[5], v[4]],
+                [v[0], v[4], v[5], v[3]],
+            )
         else:
-            c = ([v[0], v[1], v[2], v[4]], [v[0], v[4], v[2], v[5]],
-                 [v[0], v[4], v[5], v[3]])
+            c = (
+                [v[0], v[1], v[2], v[4]],
+                [v[0], v[4], v[2], v[5]],
+                [v[0], v[4], v[5], v[3]],
+            )
         return c
 
     lc = mesh.characteristic_length()
@@ -315,24 +324,22 @@ def extrude_mesh(mesh, offset=None, subdivisions=None):
     v[:, 0:2] = np.tile(mesh.vertices, (subdivisions + 1, 1))
 
     nt = 3 * ncell
-    c = np.zeros((nt * subdivisions, 4), dtype='int')
-    m = np.zeros((nt * subdivisions), dtype='int')
+    c = np.zeros((nt * subdivisions, 4), dtype="int")
+    m = np.zeros((nt * subdivisions), dtype="int")
 
     for i in range(ncell):
         (v0, v1, v2) = mesh.cells[i]
-        conn = _get_connectivity(
-            (v0, v1, v2, v0 + nvert, v1 + nvert, v2 + nvert))
+        conn = _get_connectivity((v0, v1, v2, v0 + nvert, v1 + nvert, v2 + nvert))
         c[3 * i] = conn[0]
         c[3 * i + 1] = conn[1]
         c[3 * i + 2] = conn[2]
-        m[3 * i:3 * i + 3] = mesh.cell_markers[i]
+        m[3 * i : 3 * i + 3] = mesh.cell_markers[i]
 
     for i in range(1, subdivisions):
-        v[i * nvert:(i + 1) * nvert, 2] = i * delta_z
-        c[i * nt:(i + 1) * nt] = c[(i - 1) * nt:i * nt] + nvert
-        m[i * nt:(i + 1) * nt] = m[(i - 1) * nt:i * nt]
-    v[subdivisions * nvert:
-      (subdivisions + 1) * nvert, 2] = subdivisions * delta_z
+        v[i * nvert : (i + 1) * nvert, 2] = i * delta_z
+        c[i * nt : (i + 1) * nt] = c[(i - 1) * nt : i * nt] + nvert
+        m[i * nt : (i + 1) * nt] = m[(i - 1) * nt : i * nt]
+    v[subdivisions * nvert : (subdivisions + 1) * nvert, 2] = subdivisions * delta_z
 
     outmesh = MeshBase()
     outmesh.set_vertices(v)
@@ -347,9 +354,9 @@ def find_edges(mesh, neighbours=False):
     nt = len(mesh.cells)
     ne = 3 * nt
 
-    last_edge = -1 * np.ones(nv, dtype='int')
-    next_edge = -1 * np.ones(ne, dtype='int')
-    edges = -1 * np.ones((ne, 4), dtype='int')
+    last_edge = -1 * np.ones(nv, dtype="int")
+    next_edge = -1 * np.ones(ne, dtype="int")
+    edges = -1 * np.ones((ne, 4), dtype="int")
 
     nedges = 0
     for i, cell in enumerate(mesh.cells):
@@ -411,9 +418,9 @@ def remove_duplicate_faces(mesh):
     nv = len(mesh.vertices)
     nt = len(mesh.cells)
 
-    last_face = -1 * np.ones(nv, dtype='int')
-    next_face = -1 * np.ones(nt, dtype='int')
-    faces = -1 * np.ones((nt, 4), dtype='int')
+    last_face = -1 * np.ones(nv, dtype="int")
+    next_face = -1 * np.ones(nt, dtype="int")
+    faces = -1 * np.ones((nt, 4), dtype="int")
 
     idx = np.zeros(nt)
 
@@ -423,13 +430,12 @@ def remove_duplicate_faces(mesh):
         face_found = False
         n = last_face[v[0]]
         while n != -1:
-            if faces[n, 0] == v[0] and faces[n, 1] == v[1] and faces[n,
-                                                                     2] == v[2]:
+            if faces[n, 0] == v[0] and faces[n, 1] == v[1] and faces[n, 2] == v[2]:
                 face_found = True
                 break
             n = next_face[n]
         if face_found is False:
-            faces[nfaces,:3] = v
+            faces[nfaces, :3] = v
             faces[nfaces, 3] = i
             next_face[nfaces] = last_face[v[0]]
             last_face[v[0]] = nfaces
@@ -456,9 +462,9 @@ def merge_meshes(m1, m2, tol=1.0e-6):
     all_mark = np.zeros(len(all_cell))
 
     if m1.cell_markers is not None:
-        all_mark[:len(m1.cells)] = m1.cell_markers
+        all_mark[: len(m1.cells)] = m1.cell_markers
     if m2.cell_markers is not None:
-        all_mark[len(m1.cells):] = m2.cell_markers
+        all_mark[len(m1.cells) :] = m2.cell_markers
 
     m = MeshBase(all_vert, all_cell, cell_markers=all_mark)
 
@@ -528,10 +534,10 @@ def medit_write(filename, vertices, cells, ids=None, vids=None):
     dim = vertices.shape[1]
 
     if ids is None:
-        ids = np.zeros((len(cells)), dtype='int')
+        ids = np.zeros((len(cells)), dtype="int")
 
     if vids is None:
-        vids = np.zeros((len(vertices)), dtype='int')
+        vids = np.zeros((len(vertices)), dtype="int")
 
     f = open(filename, "w")
     f.write("MeshVersionFormatted 1\n")
@@ -551,20 +557,39 @@ def medit_write(filename, vertices, cells, ids=None, vids=None):
     elif dim == 2 and cells.shape[1] == 4:
         f.write("Quadrilaterals\n%d\n" % cells.shape[0])
         for c, m in zip(cells, ids):
-            f.write("%d\t%d\t%d\t%d\t%d\n" % (c[0] + 1, c[1] + 1, c[2] + 1, c[3] + 1, m))
+            f.write(
+                "%d\t%d\t%d\t%d\t%d\n" % (c[0] + 1, c[1] + 1, c[2] + 1, c[3] + 1, m)
+            )
     elif dim == 3 and cells.shape[1] == 4:
         f.write("Tetrahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
-            f.write("%d\t%d\t%d\t%d\t%d\n" %
-                    (cells[i, 0] + 1, cells[i, 1] + 1, cells[i, 2] + 1,
-                     cells[i, 3] + 1, ids[i]))
-    elif dim==3 and cells.shape[1] == 8:
+            f.write(
+                "%d\t%d\t%d\t%d\t%d\n"
+                % (
+                    cells[i, 0] + 1,
+                    cells[i, 1] + 1,
+                    cells[i, 2] + 1,
+                    cells[i, 3] + 1,
+                    ids[i],
+                )
+            )
+    elif dim == 3 and cells.shape[1] == 8:
         f.write("Hexahedra\n%d\n" % cells.shape[0])
         for i in range(len(cells)):
-            f.write("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n" %
-                    (cells[i, 0] + 1, cells[i, 1] + 1, cells[i, 2] + 1, cells[i, 3] + 1,
-                     cells[i, 4] + 1, cells[i, 5] + 1, cells[i, 6] + 1, cells[i, 7] + 1,
-                     ids[i]))
+            f.write(
+                "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n"
+                % (
+                    cells[i, 0] + 1,
+                    cells[i, 1] + 1,
+                    cells[i, 2] + 1,
+                    cells[i, 3] + 1,
+                    cells[i, 4] + 1,
+                    cells[i, 5] + 1,
+                    cells[i, 6] + 1,
+                    cells[i, 7] + 1,
+                    ids[i],
+                )
+            )
 
     f.write("End")
     f.close()
@@ -575,16 +600,16 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
     dim = vertices.shape[1]
 
     if cells.shape[1] == 3:
-        cell_type = 'triangle'
+        cell_type = "triangle"
         cell_type_id = 5
     elif dim == 3 and cells.shape[1] == 4:
-        cell_type = 'tetrahedron'
+        cell_type = "tetrahedron"
         cell_type_id = 10
     elif dim == 2 and cells.shape[1] == 4:
-        cell_type = 'quadrilateral'
+        cell_type = "quadrilateral"
         cell_type_id = 9
     elif cells.shape[1] == 8:
-        cell_type = 'hexahedron'
+        cell_type = "hexahedron"
         cell_type_id = 12
 
     # print cell_type
@@ -600,21 +625,31 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
         if dim == 2:
             f.write("%f %f %f\n" % (vertices[i, 0], vertices[i, 1], 0.0))
         else:
-            f.write("%f %f %f\n" %
-                    (vertices[i, 0], vertices[i, 1], vertices[i, 2]))
+            f.write("%f %f %f\n" % (vertices[i, 0], vertices[i, 1], vertices[i, 2]))
 
     f.write("CELLS %d %d\n" % (len(cells), (cells.shape[1] + 1) * len(cells)))
 
     for i in range(len(cells)):
-        if cell_type == 'triangle':
+        if cell_type == "triangle":
             f.write("3 %d %d %d\n" % (cells[i, 0], cells[i, 1], cells[i, 2]))
-        elif cell_type == 'tetrahedron' or cell_type == 'quadrilateral':
-            f.write("4 %d %d %d %d\n" %
-                    (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3]))
-        elif cell_type == 'hexahedron':
-            f.write("8 %d %d %d %d %d %d %d %d\n" %
-                    (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3],
-                     cells[i, 4], cells[i, 5], cells[i, 6], cells[i, 7]))
+        elif cell_type == "tetrahedron" or cell_type == "quadrilateral":
+            f.write(
+                "4 %d %d %d %d\n" % (cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3])
+            )
+        elif cell_type == "hexahedron":
+            f.write(
+                "8 %d %d %d %d %d %d %d %d\n"
+                % (
+                    cells[i, 0],
+                    cells[i, 1],
+                    cells[i, 2],
+                    cells[i, 3],
+                    cells[i, 4],
+                    cells[i, 5],
+                    cells[i, 6],
+                    cells[i, 7],
+                )
+            )
 
     f.write("CELL_TYPES %d\n" % len(cells))
     for _ in range(len(cells)):
@@ -631,16 +666,18 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
 
     if cell_data is not None:
         for key, data in list(cell_data.items()):
-            data_dim = len(data)/len(cells)
+            data_dim = len(data) / len(cells)
             f.write("SCALARS %s float %d\n" % (key, data_dim))
             f.write("LOOKUP_TABLE default\n")
             for i in range(len(cells)):
                 if data_dim == 1:
                     f.write("%e\n" % data[i])
                 elif data_dim == 2:
-                    f.write("%e %e\n" % (data[2*i], data[2*i+1]))
+                    f.write("%e %e\n" % (data[2 * i], data[2 * i + 1]))
                 elif data_dim == 3:
-                    f.write("%e %e %e\n" % (data[3*i], data[3*i+1], data[3*i+2]))
+                    f.write(
+                        "%e %e %e\n" % (data[3 * i], data[3 * i + 1], data[3 * i + 2])
+                    )
 
     if point_data is not None:
         f.write("POINT_DATA %d\n" % len(vertices))
@@ -651,11 +688,12 @@ def vtk_write(filename, vertices, cells, ids=None, point_data=None, cell_data=No
                 f.write("LOOKUP_TABLE default\n")
                 for i in range(len(vertices)):
                     if dim == 2:
-                        f.write("%e %e %e\n" %
-                                (data[2 * i], data[2 * i + 1], 0))
+                        f.write("%e %e %e\n" % (data[2 * i], data[2 * i + 1], 0))
                     else:
-                        f.write("%e %e %e\n" % (data[3 * i], data[3 * i + 1],
-                                                data[3 * i + 2]))
+                        f.write(
+                            "%e %e %e\n"
+                            % (data[3 * i], data[3 * i + 1], data[3 * i + 2])
+                        )
             else:
                 f.write("SCALARS %s float 1\n" % key)
                 f.write("LOOKUP_TABLE default\n")
@@ -680,10 +718,10 @@ def pdf_write(filename, vertices, cells, ids):
 
     fig = plt.figure()
     for points in cells:
-        plt.fill(vertices[points, 0], vertices[points, 1],
-                 facecolor='0.9',
-                 edgecolor='k')
-        plt.gca().set_aspect('equal')
+        plt.fill(
+            vertices[points, 0], vertices[points, 1], facecolor="0.9", edgecolor="k"
+        )
+        plt.gca().set_aspect("equal")
     plt.gca().set_axis_off()
     fig.savefig(filename)
 
@@ -692,88 +730,95 @@ def zebulon_write(filename, vertices, cells):
     """Write mesh to Zebulon format (*.geof)"""
     dim = vertices.shape[1]
     if cells.shape[1] == 3:
-        cell_type = 'c2d3'
+        cell_type = "c2d3"
     else:
-        cell_type = 'c3d4'
-    f = open(filename, 'w')
-    f.write('***geometry\n')
-    f.write('**node\n')
-    f.write('%d %d\n' % (vertices.shape[0], vertices.shape[1]))
+        cell_type = "c3d4"
+    f = open(filename, "w")
+    f.write("***geometry\n")
+    f.write("**node\n")
+    f.write("%d %d\n" % (vertices.shape[0], vertices.shape[1]))
     for i, v in enumerate(vertices):
         if dim == 2:
-            f.write('    %d %e %e\n' % (i + 1, v[0], v[1]))
+            f.write("    %d %e %e\n" % (i + 1, v[0], v[1]))
         else:
-            f.write('    %d %e %e %e\n' % (i + 1, v[0], v[1], v[2]))
-    f.write('**element\n')
-    f.write('%d\n' % cells.shape[0])
+            f.write("    %d %e %e %e\n" % (i + 1, v[0], v[1], v[2]))
+    f.write("**element\n")
+    f.write("%d\n" % cells.shape[0])
     for i, c in enumerate(cells):
-        if cell_type == 'c2d3':
-            f.write('    %d %s %d %d %d\n' %
-                    (i + 1, cell_type, c[0] + 1, c[1] + 1, c[2] + 1))
+        if cell_type == "c2d3":
+            f.write(
+                "    %d %s %d %d %d\n"
+                % (i + 1, cell_type, c[0] + 1, c[1] + 1, c[2] + 1)
+            )
         else:
-            f.write('    %d %s %d %d %d %d\n' %
-                    (i + 1, cell_type, c[0] + 1, c[1] + 1, c[2] + 1, c[3] + 1))
-    f.write('***return')
+            f.write(
+                "    %d %s %d %d %d %d\n"
+                % (i + 1, cell_type, c[0] + 1, c[1] + 1, c[2] + 1, c[3] + 1)
+            )
+    f.write("***return")
     f.close()
 
 
 def _write_by_line(f, data, max_per_line=8, sep=","):
     out = ""
-    nline = len(data) / max_per_line
+    nline = len(data) // max_per_line
     for k in range(nline):
-        out += "".join("%d%s " % (x, sep)
-                       for x in data[k * max_per_line:(k + 1) * max_per_line])
+        out += "".join(
+            "%d%s " % (x, sep) for x in data[k * max_per_line : (k + 1) * max_per_line]
+        )
         out += "\n"
-    out += "".join("%d%s " % (x, sep) for x in data[nline * max_per_line:])
+    out += "".join("%d%s " % (x, sep) for x in data[nline * max_per_line :])
     if len(data) % max_per_line:
         out += "\n"
 
-    f.write('%s' % out)
+    f.write("%s" % out)
 
 
-def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, cell_type=None):
+def abaqus_write(
+    filename, vertices, cells, ids=None, nsets=None, elsets=None, cell_type=None
+):
     """Write mesh to Abaqus formt (*.inp)"""
     dim = vertices.shape[1]
 
     if cell_type is None:
         if dim == 2 and cells.shape[1] == 3:
-            cell_type = 'cps3'
+            cell_type = "cps3"
         elif dim == 2 and cells.shape[1] == 4:
-            cell_type = 'cps4'
+            cell_type = "cps4"
         elif dim == 3 and cells.shape[1] == 4:
-            cell_type = 'c3d4'
+            cell_type = "c3d4"
         elif dim == 3 and cells.shape[1] == 8:
-            cell_type = 'c3d8'
+            cell_type = "c3d8"
         else:
             raise ValueError("Unknown element type in dim  %s" % dim)
 
-    f = open(filename, 'w')
+    f = open(filename, "w")
 
     # Write nodes
-    f.write('*node\n')
+    f.write("*node\n")
     for i, v in enumerate(vertices):
         f.write(str(i + 1))
         for c in v:
-            f.write(', ' + str(c))
-        f.write('\n')
+            f.write(", " + str(c))
+        f.write("\n")
 
     # Write elements
-    f.write('*element, type=' + cell_type + '\n')
+    f.write("*element, type=" + cell_type + "\n")
     for i, c in enumerate(cells):
         f.write(str(i + 1))
         for v in c:
-            f.write(', ' + str(v + 1))
-        f.write('\n')
+            f.write(", " + str(v + 1))
+        f.write("\n")
 
     # Write elsets
     if ids is not None:
         for idx in np.unique(ids):
-            f.write('*elset, elset=elset%d\n' % idx)
+            f.write("*elset, elset=elset%d\n" % idx)
             elem = np.where(ids == idx)[0] + 1
             _write_by_line(f, elem)
     elif elsets:
         for key, value in elsets.items():
-            f.write('*elset, elset=%s\n' % key)
+            f.write("*elset, elset=%s\n" % key)
             _write_by_line(f, value + 1)
 
     # Write nsets
@@ -782,36 +827,36 @@ def abaqus_write(filename, vertices, cells, ids=None, nsets=None, elsets=None, c
     tol = 1e-4
 
     nset = np.where(np.abs(vertices[:, 0] - xmin[0]) < tol)[0]
-    f.write('*nset, nset=xmin\n')
+    f.write("*nset, nset=xmin\n")
     _write_by_line(f, nset + 1)
 
     nset = np.where(np.abs(vertices[:, 0] - xmax[0]) < tol)[0]
-    f.write('*nset, nset=xmax\n')
+    f.write("*nset, nset=xmax\n")
     _write_by_line(f, nset + 1)
 
     nset = np.where(np.abs(vertices[:, 1] - xmin[1]) < tol)[0]
-    f.write('*nset, nset=ymin\n')
+    f.write("*nset, nset=ymin\n")
     _write_by_line(f, nset + 1)
 
     nset = np.where(np.abs(vertices[:, 1] - xmax[1]) < tol)[0]
-    f.write('*nset, nset=ymax\n')
+    f.write("*nset, nset=ymax\n")
     _write_by_line(f, nset + 1)
 
     if dim == 3:
         nset = np.where(np.abs(vertices[:, 2] - xmin[2]) < tol)[0]
-        f.write('*nset, nset=zmin\n')
+        f.write("*nset, nset=zmin\n")
         _write_by_line(f, nset + 1)
 
         nset = np.where(np.abs(vertices[:, 2] - xmax[2]) < tol)[0]
-        f.write('*nset, nset=zmax\n')
+        f.write("*nset, nset=zmax\n")
         _write_by_line(f, nset + 1)
 
-    f.write('*nset, nset=all, generate\n')
-    f.write('1, %d\n' % len(vertices))
+    f.write("*nset, nset=all, generate\n")
+    f.write("1, %d\n" % len(vertices))
 
     if nsets:
         for key, value in nsets.items():
-            f.write('*nset, nset=%s\n' % key)
+            f.write("*nset, nset=%s\n" % key)
             _write_by_line(f, value + 1)
 
     f.close()
@@ -827,15 +872,19 @@ def nastran_write(filename, vertices, cells, tags=None, ids=None):
 
     nv = len(vertices)
 
-    with open(filename, 'w') as f:
-        f.write('$ Created by meshutils.py\n')
-        for k, (v,t) in enumerate(zip(vertices, tags)):
-            f.write('%-8s%16d%16d%16.6e%16.6e%-8s\n%-8s%16.6e\n' % ('GRID*',k+1, 0, v[0], v[1], '*', '*', v[2]))
+    with open(filename, "w") as f:
+        f.write("$ Created by meshutils.py\n")
+        for k, (v, t) in enumerate(zip(vertices, tags)):
+            f.write(
+                "%-8s%16d%16d%16.6e%16.6e%-8s\n%-8s%16.6e\n"
+                % ("GRID*", k + 1, 0, v[0], v[1], "*", "*", v[2])
+            )
         # for k, (c,i) in enumerate(zip(cells, ids)):
         #     f.write('%-8s%16d%16d%16d%16d%-8s\n%-8s%16d%16d\n' % ('CTETRA*', k, i, c[0], c[1], '*N%d' % (k + nv), '*N%d' % (k + nv), c[2], c[3]))
-        for k, (c,i) in enumerate(zip(cells, ids)):
-            f.write('%-8s%8d%8d%8d%8d%8d%8d\n' % ('CTETRA', k+1, i, c[0]+1, c[1]+1, c[2]+1, c[3]+1))
-            
-        f.write('ENDDATA\n')
-        
+        for k, (c, i) in enumerate(zip(cells, ids)):
+            f.write(
+                "%-8s%8d%8d%8d%8d%8d%8d\n"
+                % ("CTETRA", k + 1, i, c[0] + 1, c[1] + 1, c[2] + 1, c[3] + 1)
+            )
 
+        f.write("ENDDATA\n")

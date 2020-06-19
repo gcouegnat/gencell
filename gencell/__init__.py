@@ -1,11 +1,2 @@
-from . import coda
-from . import fetools
-from . import feutils
-from . import ffth
-from . import mesher
-from . import meshutils
-from . import mshint
-from . import tetgen
-from . import triangle
-from . import utils
-from . import yams
+from . import (coda, fetools, feutils, ffth, mesher, meshutils, mshint, tetgen,
+               triangle, utils, yams)
