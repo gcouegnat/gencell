@@ -775,7 +775,7 @@ def _write_by_line(f, data, max_per_line=8, sep=","):
 
 
 def abaqus_write(
-    filename, vertices, cells, ids=None, nsets=None, elsets=None, cell_type=None
+    filename, vertices, cells, ids=None, nsets=None, elsets=None, cell_type=None, tol=1e-4
 ):
     """Write mesh to Abaqus formt (*.inp)"""
     dim = vertices.shape[1]
@@ -824,7 +824,6 @@ def abaqus_write(
     # Write nsets
     xmin = np.min(vertices, axis=0)
     xmax = np.max(vertices, axis=0)
-    tol = 1e-4
 
     nset = np.where(np.abs(vertices[:, 0] - xmin[0]) < tol)[0]
     f.write("*nset, nset=xmin\n")
